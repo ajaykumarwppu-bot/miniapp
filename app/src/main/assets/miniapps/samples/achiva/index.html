@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Achiva Study OS</title>
+  <link rel="stylesheet" href="style/main.css">
+  <!-- AntiGem SDK: storage, MCP tools, account, hot reload -->
+  <script src="/__antigem/antigem-sdk.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">A</span>
+      <div>
+        <h1>Achiva Study OS</h1>
+        <p id="account-line">guest@local</p>
+      </div>
+    </div>
+    <span class="streak-chip" id="streak-chip">🔥 0</span>
+  </header>
+
+  <main class="content">
+    <!-- Focus timer card -->
+    <section class="card timer-card">
+      <h2>Focus Session</h2>
+      <div class="timer-display" id="timer-display">25:00</div>
+      <div class="timer-controls">
+        <button id="btn-start" class="btn primary">Start</button>
+        <button id="btn-reset" class="btn ghost">Reset</button>
+      </div>
+      <p class="hint" id="timer-hint">25 minute focus, 5 minute break. Progress saves automatically.</p>
+    </section>
+
+    <!-- Tasks card -->
+    <section class="card tasks-card">
+      <h2>Today's Tasks</h2>
+      <form id="task-form" class="task-form">
+        <input id="task-input" type="text" placeholder="Add a study task… (e.g. Revise chapter 4)" autocomplete="off">
+        <button type="submit" class="btn primary small">Add</button>
+      </form>
+      <ul id="task-list" class="task-list"></ul>
+      <p class="hint"><span id="task-progress">0 / 0 done</span> · stored in data.json via AntiGem.storage</p>
+    </section>
+
+    <!-- Bridge card -->
+    <section class="card bridge-card">
+      <h2>AntiGem Bridge</h2>
+      <p class="hint">This app is a plain web app in <code>~/mini-apps/achiva/</code>. The AI agent can edit it live — changes appear here automatically.</p>
+      <div class="bridge-actions">
+        <button id="btn-reload" class="btn ghost small">Reload</button>
+        <button id="btn-ping" class="btn ghost small">Ping notes MCP</button>
+      </div>
+      <pre id="bridge-log" class="bridge-log">Ready.</pre>
+    </section>
+  </main>
+
+  <script src="features/app.js"></script>
+</body>
+</html>

@@ -18,6 +18,7 @@ If you are new, start with the [front page](README.md), then [Getting Started](0
 | Know what a word means | [15 — FAQ & Glossary](15-faq-and-glossary.md) |
 | Let agents analyze apps (APK, Flutter, React Native) | [16 — Reverse Engineering with REA](16-reverse-engineering-rea.md) |
 | Build Android apps on the phone (Compose, Flutter, React Native) | [17 — Building Android Apps on the Phone](17-android-development.md) |
+| Build and run small apps inside AntiGem (Mini Apps) | [18 — Mini Apps (Super-App Platform)](18-mini-apps.md) |
 | Check that everything is documented | [00 — Feature Coverage & Verification Proof](00-feature-coverage.md) |
 
 ---
@@ -257,3 +258,14 @@ Install Kotlin / Java (Jetpack Compose), Flutter and React Native tooling in the
 - 📱 5. Installing on this phone
 - 🗑️ 6. Freeing space and removing
 - 🛠️ Troubleshooting
+
+### [18 — Mini Apps (Super-App Platform)](18-mini-apps.md)
+What Mini Apps are, the Mini Apps drawer, where apps and their data live (`~/mini-apps/`, `~/antigem-data/mini-apps/`), the Achiva Study OS sample, hot reload while the agent edits, and the `window.AntiGem` JavaScript API.
+
+- 🧩 1. What Is a Mini App? (folders, manifest, where they live)
+- 📂 2. Opening Mini Apps (drawer, refresh, sample app)
+- 💾 3. Storage That You Can Read (dual-write, per-account, backup & reset)
+- ⚡ 4. Hot Reload: Watch the AI Build Your App Live (and Git rollback)
+- 🧰 5. The JavaScript API (`window.AntiGem`)
+- 🗣️ 6. Asking the Agent for a Mini App
+- 🛠️ 7. Troubleshooting

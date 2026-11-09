@@ -51,6 +51,7 @@ Explore the guides below to learn how each part of AntiGem works:
 | **15** | [FAQ & Glossary](15-faq-and-glossary.md) | Answers to common questions and plain-English definitions of technical terms used throughout the app. |
 | **16** | [Reverse Engineering with REA](16-reverse-engineering-rea.md) | Letting agents analyze APKs, installed apps, Flutter, React Native and native code with REA: modular install in an Ubuntu container, tool groups, MCP setup and the REA skill. |
 | **17** | [Building Android Apps on the Phone](17-android-development.md) | Building Kotlin / Compose, Flutter and React Native apps on the phone: per-framework install in the Ubuntu container, test builds, the `adev` commands and the Android Development skill. |
+| **18** | [Mini Apps (Super-App Platform)](18-mini-apps.md) | Lightweight web apps installed in `~/mini-apps/`: the Mini Apps drawer, per-account mirrored storage, live hot reload while the AI agent edits, and the bundled Achiva Study OS sample. |
 
 ---
 

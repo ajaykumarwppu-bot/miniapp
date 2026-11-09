@@ -1,0 +1,13 @@
+{
+  "manifest_version": 1,
+  "id": "com.achiva.studyos",
+  "name": "Achiva Study OS",
+  "version": "1.0.0",
+  "entry": "index.html",
+  "icon": "icon.png",
+  "theme_color": "#0f172a",
+  "permissions": [
+    "storage",
+    "mcp"
+  ]
+}

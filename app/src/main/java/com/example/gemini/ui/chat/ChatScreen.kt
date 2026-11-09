@@ -1313,6 +1313,12 @@ fun ChatScreen(
                 },
                 // the sidebar stays open: the picker floats over it so the new look shows on the sidebar and the chat
                 onOpenThemes = { showThemePanel = !showThemePanel },
+                onOpenMiniApps = {
+                    scope.launch { drawerState.close() }
+                    context.startActivity(
+                        android.content.Intent(context, com.example.gemini.miniapp.MiniAppsDrawerActivity::class.java)
+                    )
+                },
                 agyEnabled =com.example.gemini.domain.model.AgentKind.AGY in enabledAgents,
                 accountsButton = {
                     com.example.gemini.ui.agents.AccountsButton(

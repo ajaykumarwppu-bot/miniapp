@@ -1,0 +1,164 @@
+/* Achiva Study OS — sample Mini App styling (dark slate + terracotta, matches AntiGem) */
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f172a;
+  --bg-card: #1e293b;
+  --bg-input: #0b1220;
+  --text: #f1f5f9;
+  --text-dim: #94a3b8;
+  --accent: #c96f4a;
+  --accent-soft: rgba(201, 111, 74, 0.14);
+  --ok: #4ade80;
+  --radius: 16px;
+}
+
+html, body { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ---------------- header ---------------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 16px 10px;
+}
+
+.brand { display: flex; align-items: center; gap: 12px; }
+
+.brand-mark {
+  width: 42px; height: 42px;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border: 1.5px solid var(--accent);
+  border-radius: 12px;
+  font-size: 20px; font-weight: 800; color: var(--text);
+}
+
+.brand h1 { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+.brand p { font-size: 11px; color: var(--text-dim); }
+
+.streak-chip {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px; font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+/* ---------------- cards ---------------- */
+
+.content { padding: 8px 16px 24px; display: flex; flex-direction: column; gap: 14px; }
+
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.card h2 { font-size: 13px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+
+/* ---------------- timer ---------------- */
+
+.timer-display {
+  font-size: 52px; font-weight: 200;
+  text-align: center;
+  letter-spacing: 2px;
+  margin: 8px 0 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-display.running { color: var(--accent); }
+
+.timer-controls { display: flex; gap: 10px; justify-content: center; }
+
+.btn {
+  border: none; border-radius: 12px;
+  padding: 10px 22px;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s ease, opacity 0.15s ease;
+}
+.btn:active { transform: scale(0.96); }
+
+.btn.primary { background: var(--accent); color: #fff; }
+.btn.primary.paused { background: #64748b; }
+.btn.ghost { background: transparent; color: var(--text-dim); border: 1px solid rgba(148, 163, 184, 0.35); }
+.btn.small { padding: 7px 14px; font-size: 12.5px; }
+
+.hint { font-size: 11px; color: var(--text-dim); margin-top: 10px; text-align: center; }
+.hint code { background: var(--bg-input); padding: 1px 5px; border-radius: 5px; font-size: 10.5px; }
+
+/* ---------------- tasks ---------------- */
+
+.task-form { display: flex; gap: 8px; }
+
+.task-form input {
+  flex: 1;
+  background: var(--bg-input);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 13.5px;
+  outline: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.task-form input:focus { border-color: var(--accent); }
+
+.task-list { list-style: none; margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+
+.task-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-input);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13.5px;
+  animation: pop 0.15s ease;
+}
+
+@keyframes pop { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.task-item input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); }
+
+.task-item .label { flex: 1; }
+.task-item.done .label { text-decoration: line-through; color: var(--text-dim); }
+
+.task-item .delete {
+  background: none; border: none;
+  color: var(--text-dim); font-size: 15px;
+  cursor: pointer; padding: 2px 6px;
+}
+
+/* ---------------- bridge ---------------- */
+
+.bridge-actions { display: flex; gap: 10px; margin-top: 4px; }
+
+.bridge-log {
+  margin-top: 10px;
+  background: var(--bg-input);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 20px;
+  max-height: 120px;
+  overflow-y: auto;
+  -webkit-user-select: text;
+  user-select: text;
+}

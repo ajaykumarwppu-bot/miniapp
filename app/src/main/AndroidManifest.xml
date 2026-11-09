@@ -191,6 +191,24 @@
             android:taskAffinity=""
             android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
 
+        <!-- Mini Apps: the launcher grid for ~/mini-apps/ -->
+        <activity
+            android:name=".miniapp.MiniAppsDrawerActivity"
+            android:exported="false"
+            android:label="Mini Apps"
+            android:theme="@style/Theme.Gemini"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize"
+            android:windowSoftInputMode="stateHidden|adjustResize" />
+
+        <!-- Mini App runtime: zero-server WebView container serving ~/mini-apps/<folder>/ on antigem.local -->
+        <activity
+            android:name=".miniapp.MiniAppContainerActivity"
+            android:exported="false"
+            android:label="Mini App"
+            android:theme="@style/Theme.Gemini"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize"
+            android:windowSoftInputMode="stateHidden|adjustResize" />
+
         <!-- Termux Open Activity (termux-open / termux-open-url / xdg-open activity intent targets) -->
         <activity
             android:name="com.termux.app.TermuxOpenActivity"

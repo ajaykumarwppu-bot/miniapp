@@ -73,7 +73,15 @@ class MiniAppContainerActivity : Activity() {
         assetLoader = WebViewAssetLoader.Builder()
             .setDomain(VIRTUAL_DOMAIN)
             .addPathHandler("/$appFolder/", WebViewAssetLoader.InternalStoragePathHandler(this, info.dir))
-            .addPathHandler("/__antigem/", WebViewAssetLoader.AssetsPathHandler(this, RUNTIME_ASSET_DIR))
+            .addPathHandler(
+                "/__antigem/",
+                // androidx.webkit 1.17 removed the (Context, String) constructor; root the
+                // handler at the bundled runtime dir by prefixing every requested path.
+                object : WebViewAssetLoader.AssetsPathHandler(this) {
+                    override fun handle(path: String): WebResourceResponse? =
+                        runCatching { super.handle("$RUNTIME_ASSET_DIR/${path.trimStart('/')}") }.getOrNull()
+                }
+            )
             .build()
 
         bridge = AntiGemBridge(this, webView, info)

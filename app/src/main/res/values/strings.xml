@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">AntiGem</string>
+    <string name="app_name">AntiGem+</string>
     <string name="anti_term_name">AntiTerm</string>
     <string name="termux_name">Termux</string>
     <string name="accessibility_service_name">AntiGem Android Automation</string>

@@ -3,7 +3,8 @@ set -euo pipefail
 
 # -----------------------------------------------------------------------------
 # AntiGem Multi-Package APK Build & Output Packager
-# Builds standard (com.antigem) and termux (com.termux) flavors.
+# This fork builds the standard flavor only (com.antigemplus) so the release APK installs
+# alongside the original AntiGem (com.termux) as a fully separate app.
 # -----------------------------------------------------------------------------
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -31,19 +32,13 @@ echo "📦 Version Name: v${VERSION_NAME} (Code: ${VERSION_CODE})"
 mkdir -p "${OUTPUT_DIR}"
 
 if [[ "${MODE}" == "release" ]]; then
-    # echo "🔨 Compiling Standard Release (:app:assembleStandardRelease)..."
-    # "${ROOT_DIR}/gradlew" -p "${ROOT_DIR}" :app:assembleStandardRelease
-    # for now let build for termux build only
-    echo "🔨 Compiling Termux Release (:app:assembleTermuxRelease)..."
-    "${ROOT_DIR}/gradlew" -p "${ROOT_DIR}" :app:assembleTermuxRelease
-
-    echo "🔨 Compiling Termux Shared Release (:app:assembleTermuxSharedRelease)..."
-    "${ROOT_DIR}/gradlew" -p "${ROOT_DIR}" :app:assembleTermuxSharedRelease
+    # This fork ships as its own app (com.antigemplus): build the standard flavor only.
+    # Its ports (1236/1237/8767) differ from com.termux's (1234/1235/8765), so both apps run side by side.
+    echo "🔨 Compiling Standard Release (:app:assembleStandardRelease)..."
+    "${ROOT_DIR}/gradlew" -p "${ROOT_DIR}" :app:assembleStandardRelease
 
     APKS_SRC="${ROOT_DIR}/app/build/outputs/apk"
-    # find "${APKS_SRC}/standard/release" -name "*.apk" -exec cp {} "${OUTPUT_DIR}/antiGem-standard-v${VERSION_NAME}-release.apk" \;
-    find "${APKS_SRC}/termux/release" -name "*.apk" -exec cp {} "${OUTPUT_DIR}/antiGem-termux-v${VERSION_NAME}-release.apk" \;
-    find "${APKS_SRC}/termuxShared/release" -name "*.apk" -exec cp {} "${OUTPUT_DIR}/antiGem-termux-shared-v${VERSION_NAME}-release.apk" \;
+    find "${APKS_SRC}/standard/release" -name "*.apk" -exec cp {} "${OUTPUT_DIR}/antiGem-standard-v${VERSION_NAME}-release.apk" \;
 
     # if [[ -f "${ROOT_DIR}/app/src/main/assets/bin/agy_ide_bridge" ]]; then
     #     cp "${ROOT_DIR}/app/src/main/assets/bin/agy_ide_bridge" "${OUTPUT_DIR}/agy_ide_bridge-v${VERSION_NAME}-android-arm64"

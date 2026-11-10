@@ -17,7 +17,7 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 private const val TAG = "AppUpdateManager"
-private const val DEFAULT_VERSION_URL = "https://raw.githubusercontent.com/santoshkurmi/antigem/master/version.json"
+private const val DEFAULT_VERSION_URL = "https://raw.githubusercontent.com/ajaykumarwppu-bot/miniapp/main/version.json"
 
 data class AppUpdateInfo(
     val versionCode: Int,
@@ -101,7 +101,7 @@ class AppUpdateManager(private val context: Context) {
                 currentPkg == "com.termux" -> "termux"
                 else -> "standard"
             }
-            val downloadUrl = "https://github.com/santoshkurmi/antigem/releases/download/v$remoteVersionName/antiGem-$flavorType-v$remoteVersionName-release.apk"
+            val downloadUrl = "https://github.com/ajaykumarwppu-bot/miniapp/releases/download/v$remoteVersionName/antiGem-$flavorType-v$remoteVersionName-release.apk"
 
             if (remoteVersionCode > BuildConfig.VERSION_CODE && downloadUrl.isNotBlank()) {
                 // Verify that the APK asset is actually published and downloadable on GitHub

@@ -56,7 +56,9 @@ android {
         // (com.antigem: +2, so its bridge port never equals com.termux's hub port).
         create("standard") {
             dimension = "mode"
-            applicationId = "com.antigem"
+            // This fork ships as a separate app: the new applicationId lets it install alongside
+            // the original AntiGem (com.termux) with no shared identity, data or permissions.
+            applicationId = "com.antigemplus"
             buildConfigField("int", "BRIDGE_PORT", "1236")
             buildConfigField("int", "HUB_PORT", "1237")
             buildConfigField("int", "BROWSER_MCP_PORT", "8767")

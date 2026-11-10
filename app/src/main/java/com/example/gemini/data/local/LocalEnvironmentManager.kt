@@ -172,7 +172,11 @@ object LocalEnvironmentManager {
     fun getHomeDir(context: Context): File = File(context.filesDir, "home")
     fun getProjectsDir(context: Context): File = File(getHomeDir(context), "projects")
     fun getUbuntuRootDir(context: Context): File = File(context.filesDir, "ubuntu")
-    fun isTermuxPackage(context: Context): Boolean = context.packageName == "com.termux"
+    // The fork's separate-app build (com.antigemplus) keeps the termux-style layout (full ~350MB
+    // bootstrap with agy and the agent binaries), so it must be treated like com.termux: the light
+    // Ubuntu-proot path would leave agy uninstalled ("agy is not installed at /root/.local/bin/agy").
+    fun isTermuxPackage(context: Context): Boolean =
+        context.packageName == "com.termux" || context.packageName == "com.antigemplus"
 
     fun ensureProotExtracted(context: Context): String {
         val binDir = File(context.filesDir, "bin")
@@ -611,8 +615,10 @@ object LocalEnvironmentManager {
             val libexecDir = File(getPrefixDir(context), "libexec")
             if (!libexecDir.exists()) libexecDir.mkdirs()
             val dispatcherFile = File(libexecDir, "termux-api")
+            val bashInterpreter = File(getBinDir(context), "bash").absolutePath
+            val tmpFallback = getTmpDir(context).absolutePath
             val scriptContent = """
-                #!/data/data/com.termux/files/usr/bin/bash
+                #!$bashInterpreter
                 METHOD="${'$'}1"
                 shift
 
@@ -624,13 +630,13 @@ object LocalEnvironmentManager {
                     fi
                 fi
 
-                TMP_DIR="${'$'}{TMPDIR:-/data/data/com.termux/files/usr/tmp}"
+                TMP_DIR="${'$'}{TMPDIR:-$tmpFallback}"
                 mkdir -p "${'$'}TMP_DIR"
                 TMP_OUT="${'$'}TMP_DIR/api_out.${'$'}${'$'}"
 
                 am broadcast --user 0 \
                     -a "com.termux.api" \
-                    -n "com.termux/com.example.gemini.data.receiver.TermuxApiReceiver" \
+                    -n "${context.packageName}/com.example.gemini.data.receiver.TermuxApiReceiver" \
                     --es "api_method" "${'$'}METHOD" \
                     --es "socket_output" "${'$'}TMP_OUT" \
                     "${'$'}{EXTRA_ARGS[@]}" \
@@ -1690,6 +1696,17 @@ object LocalEnvironmentManager {
                 )
             } else {
                 configureEnvironmentFiles(appContext, prefixDir, binDir, etcDir, homeDir, projectsDir)
+                // Fresh extraction: rewrite the rootfs' hardcoded com.termux script paths
+                // (usr/bin/login shebang etc.) to this app's own package dir BEFORE anything
+                // exec's them — otherwise exec(".../usr/bin/login") fails with EACCES.
+                try {
+                    val fixed = rewriteHardcodedTermuxPaths(appContext)
+                    appContext.getSharedPreferences("achiva_env_fix", Context.MODE_PRIVATE)
+                        .edit().putBoolean(TERMUX_PATH_REWRITE_PREF, true).apply()
+                    log("Rewrote hardcoded com.termux paths in $fixed script(s)")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Post-install path rewrite failed: ${e.message}")
+                }
             }
 
             // STEP 4: Strict Verification
@@ -1885,7 +1902,107 @@ object LocalEnvironmentManager {
         }
     }
 
+    /**
+     * The prebuilt rootfs (bootrapz_2026-10-04.zip) was built for the original com.termux
+     * package. Under any other package name (e.g. com.antigemplus) it breaks in 3 ways:
+     * 1. Shell scripts (usr/bin/login, termux-tools, dpkg hooks, ...) start with
+     *    '#!/data/data/com.termux/files/usr/bin/sh' and reference com.termux paths in their
+     *    bodies. The kernel cannot exec that interpreter (it lives in another app's private
+     *    dir) -> exec(".../usr/bin/login"): Permission denied.
+     * 2. 400+ symlinks carry absolute com.termux targets (vi, vim, editor, pager, lua, ...) —
+     *    dangling under this package; they must be recreated with corrected targets.
+     * 3. ELF DT_RUNPATH is already handled via LD_LIBRARY_PATH (see executeCommand).
+     *
+     * This rewrites (1) in every TEXT file under $PREFIX (NUL byte = binary: skipped, in-place
+     * binary patching would shift offsets) and (2) for every symlink whose target is affected.
+     */
+    fun rewriteHardcodedTermuxPaths(context: Context): Int {
+        if (context.packageName == "com.termux") return 0
+        val prefixDir = getPrefixDir(context)
+        if (!prefixDir.isDirectory) return 0
+        val needleData = "/data/data/com.termux/"
+        val needleUser = "/data/user/0/com.termux/"
+        val replacementData = "/data/data/${context.packageName}/"
+        val replacementUser = "/data/user/0/${context.packageName}/"
+        var rewritten = 0
+        val maxFileBytes = 2L * 1024 * 1024
+        prefixDir.walkTopDown().forEach { file ->
+            if (isSymlink(file)) {
+                // Fix dangling absolute targets: recreate the link with the app's own path
+                val target = try { Os.readlink(file.absolutePath) } catch (_: Exception) { return@forEach }
+                if (target.contains(needleData) || target.contains(needleUser)) {
+                    val newTarget = target
+                        .replace(needleData, replacementData)
+                        .replace(needleUser, replacementUser)
+                    try {
+                        file.delete() // deletes the link itself, never its (dangling) target
+                        Os.symlink(newTarget, file.absolutePath)
+                        rewritten++
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Symlink rewrite failed for ${file.absolutePath} -> $newTarget: ${e.message}")
+                    }
+                }
+                return@forEach
+            }
+            if (!file.isFile) return@forEach
+            if (file.length() == 0L || file.length() > maxFileBytes) return@forEach
+            val bytes = try { file.readBytes() } catch (_: Exception) { return@forEach }
+            // NUL byte = binary (ELF, .so, images, sqlite...) — do not touch
+            if (bytes.contains(0.toByte())) return@forEach
+            val original = String(bytes, Charsets.UTF_8)
+            if (!original.contains(needleData) && !original.contains(needleUser)) return@forEach
+            val text = original
+                .replace(needleData, replacementData)
+                .replace(needleUser, replacementUser)
+            try {
+                // FileOutputStream on the existing file truncates+writes in place: mode preserved
+                FileOutputStream(file).use { it.write(text.toByteArray(Charsets.UTF_8)) }
+                rewritten++
+            } catch (e: Exception) {
+                Log.w(TAG, "Path rewrite failed for ${file.absolutePath}: ${e.message}")
+            }
+        }
+        Log.i(TAG, "rewriteHardcodedTermuxPaths: fixed hardcoded com.termux paths in $rewritten file(s)/link(s)")
+        return rewritten
+    }
+
+    private const val TERMUX_PATH_REWRITE_PREF = "termux_path_rewrite_applied"
+
+    /**
+     * Gate for the per-spawn path rewrite (runs on every terminal / server start via
+     * ensureGlibcEnvironment). Skips the full $PREFIX scan once it has already been applied,
+     * unless the login script still contains a hardcoded com.termux path (fresh re-extract).
+     */
+    fun ensureTermuxScriptPaths(context: Context) {
+        if (context.packageName == "com.termux") return
+        val prefs = context.getSharedPreferences("achiva_env_fix", Context.MODE_PRIVATE)
+        val alreadyDone = prefs.getBoolean(TERMUX_PATH_REWRITE_PREF, false)
+        val login = File(getBinDir(context), "login")
+        val loginDirty = try {
+            login.exists() && login.readText().contains("/data/data/com.termux/")
+        } catch (_: Exception) { false }
+        if (alreadyDone && !loginDirty) return
+        val count = rewriteHardcodedTermuxPaths(context)
+        prefs.edit().putBoolean(TERMUX_PATH_REWRITE_PREF, true).apply()
+        log("Applied hardcoded com.termux path rewrite to $count script(s)")
+    }
+
+    /**
+     * termux-exec v2 (libtermux-exec-ld-preload.so) resolves its prefix from these runtime
+     * env vars instead of the compiled-in /data/data/com.termux path. Without them it would
+     * map POSIX shebangs (#!/usr/bin/env) into the ORIGINAL Termux app's private dir.
+     */
+    fun applyTermuxRuntimeEnv(env: MutableMap<String, String>, context: Context) {
+        env["TERMUX__PREFIX"] = getPrefixDir(context).absolutePath
+        env["TERMUX_APP__DATA_DIR"] = "/data/data/${context.packageName}"
+    }
+
     fun ensureGlibcEnvironment(context: Context): Boolean {
+        // Fix the hardcoded com.termux script paths once before anything spawns (idempotent,
+        // one-time full scan — see ensureTermuxScriptPaths).
+        try { ensureTermuxScriptPaths(context) } catch (e: Exception) {
+            Log.w(TAG, "ensureTermuxScriptPaths failed: ${e.message}")
+        }
         val prefixDir = getPrefixDir(context)
         val glibcDir = File(prefixDir, "glibc")
         val glibcLib = File(glibcDir, "lib")
@@ -2182,6 +2299,7 @@ object LocalEnvironmentManager {
 export PREFIX="${prefixDir.absolutePath}"
 export HOME="${homeDir.absolutePath}"
 export PATH="${homeDir.absolutePath}/.local/bin:${binDir.absolutePath}:${binDir.absolutePath}/applets:/system/bin:/system/xbin"
+export LD_LIBRARY_PATH="${prefixDir.absolutePath}/lib${'$'}{LD_LIBRARY_PATH:+:${'$'}LD_LIBRARY_PATH}"
 export TMPDIR="${prefixDir.absolutePath}/tmp"
 export TERM="xterm-256color"
 export COLORTERM="truecolor"
@@ -2224,6 +2342,7 @@ fi
                 """export PREFIX="${prefixDir.absolutePath}"
 export HOME="${homeDir.absolutePath}"
 export PATH="${homeDir.absolutePath}/.local/bin:${binDir.absolutePath}:${binDir.absolutePath}/applets:/system/bin:/system/xbin"
+export LD_LIBRARY_PATH="${prefixDir.absolutePath}/lib${'$'}{LD_LIBRARY_PATH:+:${'$'}LD_LIBRARY_PATH}"
 export TMPDIR="${prefixDir.absolutePath}/tmp"
 export TERM="xterm-256color"
 export COLORTERM="truecolor"
@@ -2467,6 +2586,12 @@ All files created here persist inside the application.
             env["TMPDIR"] = tmp.absolutePath
             env["TERM"] = "xterm-256color"
             env["COLORTERM"] = "truecolor"
+            // Bootstrap binaries (bash, node, ...) carry DT_RUNPATH=/data/data/com.termux/files/usr/lib,
+            // which is unreadable under any other package name (SELinux). LD_LIBRARY_PATH is searched
+            // BEFORE DT_RUNPATH by the bionic linker, so pointing it at the app's own $PREFIX/lib makes
+            // libandroid-support.so & friends resolve everywhere, exactly like Termux does.
+            env["LD_LIBRARY_PATH"] = "${lib.absolutePath}"
+            applyTermuxRuntimeEnv(env, context)
             env["TERMUX_VERSION"] = "0.118.0"
             env["TERMUX_MAIN_PACKAGE_NAME"] = context.packageName
             env["TERMUX_APK_RELEASE"] = "GITHUB"
@@ -2653,6 +2778,9 @@ All files created here persist inside the application.
         env["PATH"] = "${homeDir.absolutePath}/.local/bin:${binDir.absolutePath}:${prefixDir.absolutePath}/bin:/system/bin:/system/xbin"
         env["TERM"] = "xterm-256color"
         env["COLORTERM"] = "truecolor"
+        // Bootstrap bash needs the app's own lib dir (its DT_RUNPATH points at com.termux, see executeCommand)
+        env["LD_LIBRARY_PATH"] = "${getLibDir(context).absolutePath}"
+        applyTermuxRuntimeEnv(env, context)
         env["LANG"] = "en_US.UTF-8"
 
         pb.redirectErrorStream(true)
@@ -2713,6 +2841,9 @@ All files created here persist inside the application.
         env["DEBIAN_FRONTEND"] = "noninteractive"
         env["TERM"] = "xterm-256color"
         env["COLORTERM"] = "truecolor"
+        // Same DT_RUNPATH issue as executeCommand: dpkg/git spawned here need the app's own lib dir
+        env["LD_LIBRARY_PATH"] = "${getLibDir(context).absolutePath}"
+        applyTermuxRuntimeEnv(env, context)
         env["LANG"] = "en_US.UTF-8"
 
         pb.redirectErrorStream(true)

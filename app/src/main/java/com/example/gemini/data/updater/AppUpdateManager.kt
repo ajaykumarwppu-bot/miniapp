@@ -99,7 +99,7 @@ class AppUpdateManager(private val context: Context) {
             val flavorType = when {
                 currentPkg == "com.termux" && isSharedUser -> "termux-shared"
                 currentPkg == "com.termux" -> "termux"
-                else -> "standard"
+                else -> "plus"
             }
             val downloadUrl = "https://github.com/ajaykumarwppu-bot/miniapp/releases/download/v$remoteVersionName/antiGem-$flavorType-v$remoteVersionName-release.apk"
 

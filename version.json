@@ -1,10 +1,12 @@
 {
-  "version_code": 128,
-  "version_name": "1.1.8",
+  "version_code": 129,
+  "version_name": "1.1.9",
   "min_supported_version_code": 1,
   "changelog": [
-    "AntiGem+ is now the Shared UID build: the standalone app declares its own shared UID group (com.antigemplus), so companion apps signed with this fork's key can join its process — while still installing alongside the original AntiGem with no conflict",
-    "In-app updates and release APKs now come from this fork's own repository"
+    "Fixed the separate app installing only the 55 MB Ubuntu rootfs: AntiGem+ now installs the full ~350 MB Termux bootstrap with agy and all agent binaries, exactly like the original app",
+    "Fixed 'agy is not installed at /root/.local/bin/agy': the app now recognizes its own package as a termux-style environment and uses the correct agy/bridge/claude binary paths",
+    "Fixed 'CANNOT LINK EXECUTABLE' and 'Permission denied' under the com.antigemplus package: hardcoded com.termux paths in the rootfs are rewritten at install time (730+ scripts, 400+ symlinks), and every process spawn gets the correct library path and termux-exec prefix",
+    "termux-api commands (toast, vibrate, torch...) now target this app's own receiver instead of the original AntiGem"
   ],
   "is_critical": false
 }

@@ -1003,11 +1003,16 @@ class AuthPreferences(private val context: Context) {
         context.dataStore.edit { it[SECURITY_TOKEN] = validToken }
     }
 
+    // The fork's separate-app build (com.antigemplus) keeps the termux-style binary layout,
+    // so the default agy/bridge/claude/opencode/codex paths must follow the same rule.
+    private val isTermuxStyleApp: Boolean
+        get() = context.packageName == "com.termux" || context.packageName == "com.antigemplus"
+
     fun getDefaultBridgeBinaryPath(): String =
-        if (context.packageName == "com.termux") DEFAULT_BRIDGE_BINARY_PATH else DEFAULT_UBUNTU_BRIDGE_BINARY_PATH
+        if (isTermuxStyleApp) DEFAULT_BRIDGE_BINARY_PATH else DEFAULT_UBUNTU_BRIDGE_BINARY_PATH
 
     fun getDefaultAgyBinaryPath(): String =
-        if (context.packageName == "com.termux") DEFAULT_AGY_BINARY_PATH else DEFAULT_UBUNTU_AGY_BINARY_PATH
+        if (isTermuxStyleApp) DEFAULT_AGY_BINARY_PATH else DEFAULT_UBUNTU_AGY_BINARY_PATH
 
     val agyBridgeBinaryPath: Flow<String> = context.dataStore.data.map {
         it[AGY_BRIDGE_BINARY_PATH] ?: getAgyBridgeBinaryPathSync()
@@ -1036,7 +1041,7 @@ class AuthPreferences(private val context: Context) {
     }
 
     fun getDefaultClaudeBinaryPath(): String =
-        if (context.packageName == "com.termux") DEFAULT_CLAUDE_BINARY_PATH else DEFAULT_UBUNTU_CLAUDE_BINARY_PATH
+        if (isTermuxStyleApp) DEFAULT_CLAUDE_BINARY_PATH else DEFAULT_UBUNTU_CLAUDE_BINARY_PATH
 
     fun getClaudeBinaryPathSync(): String =
         syncPrefs.getString("claude_binary_path", getDefaultClaudeBinaryPath()) ?: getDefaultClaudeBinaryPath()
@@ -1048,7 +1053,7 @@ class AuthPreferences(private val context: Context) {
     }
 
     fun getDefaultOpenCodeBinaryPath(): String =
-        if (context.packageName == "com.termux") DEFAULT_OPENCODE_BINARY_PATH else DEFAULT_UBUNTU_OPENCODE_BINARY_PATH
+        if (isTermuxStyleApp) DEFAULT_OPENCODE_BINARY_PATH else DEFAULT_UBUNTU_OPENCODE_BINARY_PATH
 
     fun getOpenCodeBinaryPathSync(): String =
         syncPrefs.getString("opencode_binary_path", getDefaultOpenCodeBinaryPath()) ?: getDefaultOpenCodeBinaryPath()
@@ -1058,7 +1063,7 @@ class AuthPreferences(private val context: Context) {
     }
 
     fun getDefaultCodexBinaryPath(): String =
-        if (context.packageName == "com.termux") DEFAULT_CODEX_BINARY_PATH else DEFAULT_UBUNTU_CODEX_BINARY_PATH
+        if (isTermuxStyleApp) DEFAULT_CODEX_BINARY_PATH else DEFAULT_UBUNTU_CODEX_BINARY_PATH
 
     fun getCodexBinaryPathSync(): String =
         syncPrefs.getString("codex_binary_path", getDefaultCodexBinaryPath()) ?: getDefaultCodexBinaryPath()

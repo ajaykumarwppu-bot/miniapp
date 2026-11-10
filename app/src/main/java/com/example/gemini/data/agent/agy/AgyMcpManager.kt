@@ -294,11 +294,21 @@ class AgyMcpManager(
                             // Ensure Termux stdio binaries (npx, python3, etc.) have proper loader and PATH on Android.
                             // A server runs the MCP on its own Linux: those Termux paths would break it there.
                             if (!AuthPreferences.currentRemoteMode) {
-                                if (!envMap.containsKey("LD_PRELOAD")) {
-                                    envMap["LD_PRELOAD"] = "/data/data/com.termux/files/usr/lib/libtermux-exec.so"
+                                // Paths must follow THIS app's package (fork builds ship under a different
+                                // applicationId), so they are derived from BuildConfig instead of a hardcoded com.termux prefix.
+                                val termuxFilesDir = "/data/data/${com.example.gemini.BuildConfig.APPLICATION_ID}/files"
+                                if (!envMap.containsKey("LD_PRELOAD") && java.io.File("$termuxFilesDir/usr/lib/libtermux-exec.so").exists()) {
+                                    envMap["LD_PRELOAD"] = "$termuxFilesDir/usr/lib/libtermux-exec.so"
                                 }
+                                if (!envMap.containsKey("LD_LIBRARY_PATH")) {
+                                    envMap["LD_LIBRARY_PATH"] = "$termuxFilesDir/usr/lib"
+                                }
+                                // termux-exec v2 resolves its prefix from these runtime vars instead of the
+                                // compiled-in com.termux path — required for POSIX shebangs (#!/usr/bin/env).
+                                envMap["TERMUX__PREFIX"] = "$termuxFilesDir/usr"
+                                envMap["TERMUX_APP__DATA_DIR"] = "/data/data/${com.example.gemini.BuildConfig.APPLICATION_ID}"
                                 if (!envMap.containsKey("PATH")) {
-                                    envMap["PATH"] = "/data/data/com.termux/files/home/.local/bin:/data/data/com.termux/files/usr/bin:/system/bin"
+                                    envMap["PATH"] = "$termuxFilesDir/home/.local/bin:$termuxFilesDir/usr/bin:/system/bin"
                                 }
                             }
                             if (envMap.isNotEmpty()) {

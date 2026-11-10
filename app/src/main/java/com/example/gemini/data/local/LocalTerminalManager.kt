@@ -306,6 +306,12 @@ class LocalPtySession(
                 envMap["HOME"] = home.absolutePath
                 envMap["PATH"] = "${home.absolutePath}/.local/bin:${bin.absolutePath}:${bin.absolutePath}/applets:/system/bin:/system/xbin"
                 envMap["TMPDIR"] = tmp.absolutePath
+                // Bootstrap binaries carry DT_RUNPATH=/data/data/com.termux/files/usr/lib (unreadable
+                // under any other package). LD_LIBRARY_PATH is searched before DT_RUNPATH, so the
+                // app's own $PREFIX/lib provides libandroid-support.so etc. — same as Termux.
+                envMap["LD_LIBRARY_PATH"] = lib.absolutePath
+                // termux-exec v2 runtime prefix override + script-path fix for hardcoded com.termux paths
+                LocalEnvironmentManager.applyTermuxRuntimeEnv(envMap, context)
                 envMap["TERM"] = "xterm-256color"
                 envMap["COLORTERM"] = "truecolor"
                 envMap["TERMUX_VERSION"] = "0.118.0"

@@ -70,16 +70,16 @@ class MiniAppContainerActivity : Activity() {
 
         // Virtual domain: https://antigem.local/<folder>/... serves the app folder, /__antigem/ serves
         // the bundled runtime (the SDK) from assets. Both are same-origin for the Mini App.
+        // androidx.webkit 1.17 removed the (Context, String) AssetsPathHandler constructor and made
+        // the class final, so the runtime dir is applied by delegating with a prefixed path.
+        val runtimeAssets = WebViewAssetLoader.AssetsPathHandler(this)
         assetLoader = WebViewAssetLoader.Builder()
             .setDomain(VIRTUAL_DOMAIN)
             .addPathHandler("/$appFolder/", WebViewAssetLoader.InternalStoragePathHandler(this, info.dir))
             .addPathHandler(
                 "/__antigem/",
-                // androidx.webkit 1.17 removed the (Context, String) constructor; root the
-                // handler at the bundled runtime dir by prefixing every requested path.
-                object : WebViewAssetLoader.AssetsPathHandler(this) {
-                    override fun handle(path: String): WebResourceResponse? =
-                        runCatching { super.handle("$RUNTIME_ASSET_DIR/${path.trimStart('/')}") }.getOrNull()
+                WebViewAssetLoader.PathHandler { path ->
+                    runCatching { runtimeAssets.handle("$RUNTIME_ASSET_DIR/${path.trimStart('/')}") }.getOrNull()
                 }
             )
             .build()

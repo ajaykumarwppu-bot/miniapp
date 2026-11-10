@@ -1,11 +1,10 @@
 {
-  "version_code": 127,
-  "version_name": "1.1.7",
+  "version_code": 128,
+  "version_name": "1.1.8",
   "min_supported_version_code": 1,
   "changelog": [
-    "Added Mini Apps: AntiGem is now a super-app platform — lightweight web apps live in ~/mini-apps/<app-name>/ and open full-screen in a zero-server native container (no HTTP server, instant boot)",
-    "Mini Apps get a native bridge: atomic per-account storage mirrored to ~/antigem-data/mini-apps/<app>/<account>/data.json, local MCP tool calls, account identity and live hot reload when the AI agent edits files",
-    "Added a Mini Apps drawer (grid icon in the sidebar) listing every installed app with its icon, plus a bundled sample app (Achiva Study OS) that demonstrates storage, tasks and focus timer out of the box"
+    "AntiGem+ is now the Shared UID build: the standalone app declares its own shared UID group (com.antigemplus), so companion apps signed with this fork's key can join its process — while still installing alongside the original AntiGem with no conflict",
+    "In-app updates and release APKs now come from this fork's own repository"
   ],
   "is_critical": false
 }

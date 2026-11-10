@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This fork ships as a separate app (com.antigemplus) in the Shared UID variant: the manifest
+     joins this fork's OWN shared UID group instead of com.termux, so the APK installs alongside the
+     original AntiGem with no conflict, and companion apps signed with this fork's key can join its
+     UID and process. The label must never be switched back to com.termux: that group is owned by
+     the original app's certificate, and Android rejects a shared-UID member signed with a different
+     key (INSTALL_FAILED_SHARED_USER_INCOMPATIBLE). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    android:sharedUserId="com.antigemplus">
+</manifest>

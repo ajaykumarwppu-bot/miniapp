@@ -62,7 +62,10 @@ android {
             buildConfigField("int", "BRIDGE_PORT", "1236")
             buildConfigField("int", "HUB_PORT", "1237")
             buildConfigField("int", "BROWSER_MCP_PORT", "8767")
-            buildConfigField("boolean", "IS_SHARED_USER_ID", "false")
+            // Shared UID variant (see app/src/standard/AndroidManifest.xml): the app joins this
+            // fork's own UID group com.antigemplus, so this fork's own signed companion apps
+            // (Termux:X11, Termux:API) can share its UID and process.
+            buildConfigField("boolean", "IS_SHARED_USER_ID", "true")
         }
         create("termux") {
             dimension = "mode"

@@ -270,8 +270,32 @@ func (m *Manager) command(ctx context.Context, bin string, args ...string) *exec
 	if prefix := m.termuxPrefix(); !hasTmp && prefix != "" {
 		env = append(env, "TMPDIR="+filepath.Join(prefix, "tmp"))
 	}
+	// Termux-built node/npm ship OpenSSL with the compiled-in com.termux config path, which is
+	// unreadable under another package (SELinux) — node dies (exit 13) the moment it touches
+	// crypto (TLS download, npm install). The app exports OPENSSL_CONF for its own spawns; when
+	// the bridge was started by hand without it, point it at this prefix's own openssl.cnf.
+	if prefix := m.termuxPrefix(); prefix != "" && !hasEnvKey(env, "OPENSSL_CONF") {
+		if cnf := filepath.Join(prefix, "etc", "tls", "openssl.cnf"); fileExists(cnf) {
+			env = append(env, "OPENSSL_CONF="+cnf)
+		}
+	}
 	cmd.Env = env
 	return cmd
+}
+
+func hasEnvKey(env []string, key string) bool {
+	prefix := key + "="
+	for _, e := range env {
+		if strings.HasPrefix(e, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+func fileExists(p string) bool {
+	fi, err := os.Stat(p)
+	return err == nil && !fi.IsDir()
 }
 
 // Version runs `codex --version` (cached until the binary changes).

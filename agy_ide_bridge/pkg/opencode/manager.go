@@ -142,6 +142,23 @@ func glibcInterp(bin string) bool {
 	return false
 }
 
+// hasEnvKey reports whether the KEY=VALUE environment list already carries key.
+func hasEnvKey(env []string, key string) bool {
+	prefix := key + "="
+	for _, e := range env {
+		if strings.HasPrefix(e, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+// fileExists reports whether path exists and is not a directory.
+func fileExists(p string) bool {
+	fi, err := os.Stat(p)
+	return err == nil && !fi.IsDir()
+}
+
 // command builds the exec.Cmd for bin. On Android (Termux) the official OpenCode build needs glibc, which Android
 // does not have: like the app's Claude Code launcher, it is started through the glibc loader the app bundles
 // ($PREFIX/glibc/lib), without termux-exec preloaded (a bionic library cannot load into a glibc process).
@@ -175,6 +192,15 @@ func (m *Manager) command(ctx context.Context, bin string, args ...string) (*exe
 	// Android has no /tmp; OpenCode keeps its temp files in $TMPDIR
 	if !hasTmp && prefix != "" {
 		env = append(env, "TMPDIR="+filepath.Join(prefix, "tmp"))
+	}
+	// Termux-built node/npm ship OpenSSL with the compiled-in com.termux config path, which is
+	// unreadable under another package (SELinux) — node dies (exit 13) the moment it touches
+	// crypto (TLS download, npm install). The app exports OPENSSL_CONF for its own spawns; when
+	// the bridge was started by hand without it, point it at this prefix's own openssl.cnf.
+	if prefix != "" && !hasEnvKey(env, "OPENSSL_CONF") {
+		if cnf := filepath.Join(prefix, "etc", "tls", "openssl.cnf"); fileExists(cnf) {
+			env = append(env, "OPENSSL_CONF="+cnf)
+		}
 	}
 	cmd.Env = env
 	return cmd, nil

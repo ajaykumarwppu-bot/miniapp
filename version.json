@@ -4,9 +4,9 @@
   "min_supported_version_code": 1,
   "changelog": [
     "Merged the upstream 1.1.8 release: Connect to PC (pair the phone with VS Code on your PC and use the same chats live on both), folder tabs in Files, Claude Code subagents in the side bar, OpenCode questions and model visibility fixes, WebView DevTools and network logging, and a reliable local server restart",
-    "Fixed custom MCP servers (like Google Flow MCP) failing with 'initialize rejected by transport': MCP startup now uses the app's own ports and package paths instead of the original AntiGem's",
-    "Fixed Codex not downloading: the Codex installer now resolves the right binary paths and download location inside AntiGem+",
-    "Fixed 'failed to connect to AGI hub (Expected gRPC but was 404)' when running the agent on the cloud"
+    "Removed the legacy direct Google login that returned 'failed to connect to AGI hub (Expected gRPC but was 404)': sign-in now goes through the official agy CLI flow, exactly like the upstream app",
+    "Fixed custom MCP servers (like Google Flow MCP) failing with 'initialize rejected by transport': every node/npm spawn (stdio and plugin MCP servers, extension host, terminal shells) now gets OPENSSL_CONF pointed at this package's own openssl.cnf instead of the SELinux-blocked com.termux path",
+    "Fixed Codex not downloading: the Codex installer and the Codex/OpenCode runtimes now get the same OPENSSL_CONF fix, so node/npm no longer die with exit 13 when they touch crypto"
   ],
   "is_critical": false
 }

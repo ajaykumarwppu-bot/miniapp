@@ -2004,6 +2004,14 @@ object LocalEnvironmentManager {
         val opensslCnf = File(getPrefixDir(context), "etc/tls/openssl.cnf")
         // Only export it when the file really exists — a dangling OPENSSL_CONF is worse than none.
         if (opensslCnf.isFile) env["OPENSSL_CONF"] = opensslCnf.absolutePath
+        // Termux-built curl/apt carry the compiled-in com.termux CA bundle path, which is
+        // unreadable under any other package (SELinux) — TLS downloads from rootfs tools
+        // (installers, npm, curl) fail without pointing the vars at our own bundle.
+        val caBundle = File(getPrefixDir(context), "etc/tls/cert.pem")
+        if (caBundle.isFile) {
+            if (!env.containsKey("CURL_CA_BUNDLE")) env["CURL_CA_BUNDLE"] = caBundle.absolutePath
+            if (!env.containsKey("SSL_CERT_FILE")) env["SSL_CERT_FILE"] = caBundle.absolutePath
+        }
     }
 
     fun ensureGlibcEnvironment(context: Context): Boolean {

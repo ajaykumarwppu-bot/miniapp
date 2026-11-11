@@ -420,11 +420,181 @@ func (m *HubManager) IsRunning() bool {
 	return m.isRunning || m.isHubReady()
 }
 
+// agyMinCloudVersion: the hub's cloud agents (Remote Agents) gRPC routes exist from about agy
+// 1.5; older CLI builds answer those calls with a plain-HTTP 404, which the app reports as
+// "Expected gRPC but was HTTP status equal to 404. Content-Type text/plain". The rootfs
+// bootstrap ships an old agy snapshot (1.2.16), so the hub updates agy before it starts when
+// the installed version is below this.
+var agyMinCloudVersion = []int{1, 5, 0}
+
+var agySemverRe = regexp.MustCompile(`v?(\d+)(?:\.(\d+))?(?:\.(\d+))?`)
+
+// agyVersionAtLeast reports whether the version string v (e.g. "1.5.3") is >= min. An
+// unparsable version returns true: never block the hub start on our own parsing failure.
+func agyVersionAtLeast(v string, min []int) bool {
+	mm := agySemverRe.FindStringSubmatch(strings.TrimSpace(v))
+	if mm == nil {
+		return true
+	}
+	nums := [3]int{}
+	for i := 0; i < 3 && i+1 < len(mm); i++ {
+		if mm[i+1] != "" {
+			nums[i], _ = strconv.Atoi(mm[i+1])
+		}
+	}
+	for i := 0; i < 3; i++ {
+		mi := 0
+		if i < len(min) {
+			mi = min[i]
+		}
+		if nums[i] != mi {
+			return nums[i] > mi
+		}
+	}
+	return true
+}
+
+// agyCLIVersion returns `agy --version` ("1.2.16"), or "" when it cannot be determined.
+func agyCLIVersion(bin string) string {
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	out, err := exec.CommandContext(ctx, bin, "--version").Output()
+	if err != nil {
+		return ""
+	}
+	for _, line := range strings.Split(string(out), "\n") {
+		if line = strings.TrimSpace(line); agySemverRe.MatchString(line) {
+			return line
+		}
+	}
+	return ""
+}
+
+// ensureRecentAgy updates an outdated agy before the hub starts. It NEVER blocks the hub: on
+// any failure it logs the reason and lets Start() continue with the binary that is already
+// there (every other hub feature works on old versions too).
+func (m *HubManager) ensureRecentAgy() {
+	// once per bridge process: a failed update must not stall every later hub start
+	agyAutoUpdateOnce.Do(func() {
+		bin := m.GetAgyBin()
+		if bin == "" {
+			return
+		}
+		if fi, err := os.Stat(bin); err != nil || fi.IsDir() {
+			return
+		}
+		v := agyCLIVersion(bin)
+		if v == "" || agyVersionAtLeast(v, agyMinCloudVersion) {
+			return
+		}
+		fmt.Printf(" \033[agy]\033 agy %s is too old for cloud agents (need >= %s) — updating before the hub starts…\n", v, agyMinCloudVersionString())
+		if err := m.updateAgy(bin); err != nil {
+			log.Printf("[agy] update failed: %v — continuing with agy %s (restart the server to retry)", err, v)
+			return
+		}
+		if nv := agyCLIVersion(bin); nv != "" && nv != v {
+			fmt.Printf(" \033[✓]\033 agy updated %s -> %s\n", v, nv)
+		} else {
+			log.Printf("[agy] update ran but the version is unchanged (%s) — continuing", v)
+		}
+	})
+}
+
+// agyAutoUpdateOnce gates the pre-start agy update: at most one attempt per bridge process.
+var agyAutoUpdateOnce sync.Once
+
+// updateAgy updates the agy CLI in place: first agy's own updater (`agy update`, which
+// downloads Google's release for this platform), then Google's official installer as the
+// fallback. The installer's curl runs from the bootstrap rootfs, whose compiled-in CA bundle
+// path is blocked under a repackaged package, so CURL_CA_BUNDLE / SSL_CERT_FILE are pointed at
+// this prefix's own bundle when they are missing.
+func (m *HubManager) updateAgy(bin string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 4*time.Minute)
+	defer cancel()
+	upd := exec.CommandContext(ctx, bin, "update")
+	upd.Env = os.Environ()
+	if out, err := upd.CombinedOutput(); err != nil {
+		log.Printf("[agy] `agy update` failed (%v): %s", err, tailLines(string(out), 6))
+		home, _ := os.UserHomeDir()
+		inst := exec.CommandContext(ctx, "bash", "-c", "curl -fsSL https://antigravity.google/cli/install.sh | bash")
+		inst.Dir = home
+		inst.Env = agyInstallerEnv()
+		if iout, ierr := inst.CombinedOutput(); ierr != nil {
+			return fmt.Errorf("`agy update` and the official installer both failed (installer: %v): %s", ierr, tailLines(string(iout), 6))
+		}
+	}
+	return nil
+}
+
+// agyInstallerEnv is the bridge environment plus the TLS overrides the rootfs tools need under
+// a repackaged package id (the compiled-in /data/data/com.termux CA bundle is unreadable there).
+func agyInstallerEnv() []string {
+	env := os.Environ()
+	has := func(key string) bool {
+		p := key + "="
+		for _, e := range env {
+			if strings.HasPrefix(e, p) {
+				return true
+			}
+		}
+		return false
+	}
+	prefix := os.Getenv("PREFIX")
+	if prefix == "" {
+		if home, err := os.UserHomeDir(); err == nil && home != "" {
+			prefix = filepath.Join(home, "..", "usr")
+		}
+	}
+	if prefix != "" {
+		if ca := filepath.Join(prefix, "etc", "tls", "cert.pem"); fileExistsIn(ca) {
+			if !has("CURL_CA_BUNDLE") {
+				env = append(env, "CURL_CA_BUNDLE="+ca)
+			}
+			if !has("SSL_CERT_FILE") {
+				env = append(env, "SSL_CERT_FILE="+ca)
+			}
+		}
+		if cnf := filepath.Join(prefix, "etc", "tls", "openssl.cnf"); fileExistsIn(cnf) && !has("OPENSSL_CONF") {
+			env = append(env, "OPENSSL_CONF="+cnf)
+		}
+	}
+	return env
+}
+
+func fileExistsIn(p string) bool {
+	fi, err := os.Stat(p)
+	return err == nil && !fi.IsDir()
+}
+
+// tailLines keeps the last n lines of a long command output for an error message.
+func tailLines(s string, n int) string {
+	lines := strings.Split(strings.TrimSpace(s), "\n")
+	if len(lines) > n {
+		lines = lines[len(lines)-n:]
+	}
+	out := strings.Join(lines, " | ")
+	if len(out) > 400 {
+		out = out[len(out)-400:]
+	}
+	return out
+}
+
+func agyMinCloudVersionString() string {
+	parts := make([]string, len(agyMinCloudVersion))
+	for i, n := range agyMinCloudVersion {
+		parts[i] = strconv.Itoa(n)
+	}
+	return strings.Join(parts, ".")
+}
+
 // Start launches agy --hub with interactive feedback, a spinner, and non-blocking update bypass.
 func (m *HubManager) Start() error {
 	if m.Disabled {
 		return fmt.Errorf("Antigravity is turned off in the app")
 	}
+	// cloud agents need a recent CLI: old hubs answer the cloud gRPC routes with a plain 404.
+	// Must run before the lock and before the in-place security patch (it may replace the binary).
+	m.ensureRecentAgy()
 	m.mu.Lock()
 	// 1. Check if already active and responding to RPC requests
 	if m.isHubReady() {
@@ -809,4 +979,3 @@ func (m *HubManager) dumpRecentLogs() {
 	}
 	fmt.Println(" \033[1;31m------------------------------------\033[0m")
 }
-

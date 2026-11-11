@@ -1,12 +1,12 @@
 {
-  "version_code": 130,
-  "version_name": "1.1.10",
+  "version_code": 131,
+  "version_name": "1.1.11",
   "min_supported_version_code": 1,
   "changelog": [
-    "Merged the upstream 1.1.8 release: Connect to PC (pair the phone with VS Code on your PC and use the same chats live on both), folder tabs in Files, Claude Code subagents in the side bar, OpenCode questions and model visibility fixes, WebView DevTools and network logging, and a reliable local server restart",
-    "Removed the legacy direct Google login that returned 'failed to connect to AGI hub (Expected gRPC but was 404)': sign-in now goes through the official agy CLI flow, exactly like the upstream app",
-    "Fixed custom MCP servers (like Google Flow MCP) failing with 'initialize rejected by transport': every node/npm spawn (stdio and plugin MCP servers, extension host, terminal shells) now gets OPENSSL_CONF pointed at this package's own openssl.cnf instead of the SELinux-blocked com.termux path",
-    "Fixed Codex not downloading: the Codex installer and the Codex/OpenCode runtimes now get the same OPENSSL_CONF fix, so node/npm no longer die with exit 13 when they touch crypto"
+    "Fixed Codex not installing: dpkg/apt binaries carry a compiled-in com.termux config path that this package can never read (dpkg.cfg.d 'Permission denied'), so the Termux package route is skipped and Codex is installed from the official static build instead (sha256-verified, no dpkg needed)",
+    "Fixed cloud agents ('failed to connect to AGI hub, Expected gRPC but was 404'): the rootfs bundled an old agy CLI (1.2.16) whose hub does not have the cloud routes — the app now auto-updates agy to the latest version before starting the hub (watch the server log for 'agy updated')",
+    "Fixed TLS downloads from the terminal and installers: curl/npm now get CURL_CA_BUNDLE and SSL_CERT_FILE pointed at this package's own CA bundle instead of the blocked com.termux path",
+    "Upstream 1.1.8 features from the previous build stay: Connect to PC, folder tabs in Files, subagents in the side bar, WebView DevTools"
   ],
   "is_critical": false
 }

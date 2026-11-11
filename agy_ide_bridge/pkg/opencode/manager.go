@@ -202,6 +202,16 @@ func (m *Manager) command(ctx context.Context, bin string, args ...string) (*exe
 			env = append(env, "OPENSSL_CONF="+cnf)
 		}
 	}
+	// Same class of problem for TLS downloads: the compiled-in com.termux CA bundle is blocked,
+	// so point curl/npm at this prefix's own bundle when the env does not carry the overrides.
+	if prefix != "" && !hasEnvKey(env, "CURL_CA_BUNDLE") {
+		if ca := filepath.Join(prefix, "etc", "tls", "cert.pem"); fileExists(ca) {
+			env = append(env, "CURL_CA_BUNDLE="+ca)
+			if !hasEnvKey(env, "SSL_CERT_FILE") {
+				env = append(env, "SSL_CERT_FILE="+ca)
+			}
+		}
+	}
 	cmd.Env = env
 	return cmd, nil
 }

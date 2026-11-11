@@ -50,10 +50,46 @@ func (j *installJob) snapshot() map[string]interface{} {
 	return map[string]interface{}{"kind": j.Kind, "running": j.Running, "exit_code": j.ExitCode, "log": j.Log.String(), "started": j.Started}
 }
 
+// termuxPkgConfigReadable reports whether dpkg's compiled-in configuration directory
+// (/data/data/com.termux/files/usr/etc/dpkg/dpkg.cfg.d) is readable under THIS package. In the
+// original Termux app it is; in any repackaged app (a different package id) SELinux blocks that
+// path and every dpkg/apt run dies with "error opening configuration directory ... Permission
+// denied", so `pkg install` can never succeed there.
+func (m *Manager) termuxPkgConfigReadable() bool {
+	f, err := os.OpenFile("/data/data/com.termux/files/usr/etc/dpkg/dpkg.cfg.d", os.O_RDONLY, 0)
+	if err != nil {
+		return false
+	}
+	f.Close()
+	return true
+}
+
+// releaseInstall installs the official static musl build (no dpkg needed) and reports it in the
+// job log, so the app's install screen explains why the Termux package route was skipped.
+func (m *Manager) releaseInstall(ctx context.Context, j *installJob, update bool) error {
+	j.logf("pkg/dpkg is unusable under this package (compiled-in com.termux config paths are blocked); installing the official static build instead")
+	if err := m.installRelease(ctx, j, update); err != nil {
+		return err
+	}
+	m.afterInstall(j)
+	return nil
+}
+
 func (m *Manager) install(ctx context.Context, j *installJob, update bool) error {
 	if m.termuxNative() {
+		// repackaged package ids (com.antigemplus & co): dpkg's compiled-in com.termux config
+		// paths are SELinux-blocked -> skip the package route and use the static build directly
+		if !m.termuxPkgConfigReadable() {
+			return m.releaseInstall(ctx, j, update)
+		}
 		if err := m.installTermuxPackage(ctx, j); err != nil {
-			return err
+			// the package route can still fail for other reasons; the static build needs none of it
+			j.logf("pkg install failed (%v); falling back to the official static build", err)
+			if relErr := m.installRelease(ctx, j, update); relErr != nil {
+				return err
+			}
+			m.afterInstall(j)
+			return nil
 		}
 		m.afterInstall(j)
 		return nil

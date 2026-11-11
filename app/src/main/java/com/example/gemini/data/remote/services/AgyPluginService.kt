@@ -208,6 +208,11 @@ class AgyPluginService(
                         if (!envMap.containsKey("OPENSSL_CONF") && java.io.File("$termuxFilesDir/usr/etc/tls/openssl.cnf").exists()) {
                             envMap["OPENSSL_CONF"] = "$termuxFilesDir/usr/etc/tls/openssl.cnf"
                         }
+                        // same for curl/npm TLS: the compiled-in com.termux CA bundle is unreadable here
+                        if (!envMap.containsKey("CURL_CA_BUNDLE") && java.io.File("$termuxFilesDir/usr/etc/tls/cert.pem").exists()) {
+                            envMap["CURL_CA_BUNDLE"] = "$termuxFilesDir/usr/etc/tls/cert.pem"
+                            if (!envMap.containsKey("SSL_CERT_FILE")) envMap["SSL_CERT_FILE"] = "$termuxFilesDir/usr/etc/tls/cert.pem"
+                        }
                         if (!envMap.containsKey("PATH")) {
                             envMap["PATH"] = "$termuxFilesDir/home/.local/bin:$termuxFilesDir/usr/bin:/system/bin"
                         }

@@ -221,7 +221,8 @@ internal fun openOptionsFor(entry: ExplorerEntry, ideAvailable: Boolean, content
     val textual = contentIsText ?: k.isTextual
     val ide = if (!ideAvailable) null else when {
         textual -> OpenOption(OpenChoice.IDE, Icons.Outlined.Code, "Code editor", "Edit in the IDE", recommended = true)
-        k == FileKind.IMAGE -> OpenOption(OpenChoice.IDE, Icons.Outlined.Code, "View in IDE", "Image viewer with zoom", recommended = false)
+        // pictures and videos have AntiGem's own viewer and player
+        k == FileKind.IMAGE || k == FileKind.VIDEO -> null
         else -> OpenOption(OpenChoice.IDE, Icons.Outlined.Code, "Code editor", "Not a text file: it may not display or save correctly", recommended = false, warn = true)
     }
     val external = OpenOption(
@@ -250,10 +251,13 @@ internal fun openOptionsFor(entry: ExplorerEntry, ideAvailable: Boolean, content
         !allowPreview -> null
         k == FileKind.MARKDOWN -> OpenOption(OpenChoice.PREVIEW, Icons.Outlined.Visibility, "Preview", "Rendered Markdown", recommended = false)
         k == FileKind.VIDEO -> OpenOption(OpenChoice.PREVIEW, Icons.Outlined.SmartDisplay, "Play in AntiGem", "Built-in player: full screen, seek, speed", recommended = true)
+        k == FileKind.IMAGE && !textual -> OpenOption(OpenChoice.PREVIEW, Icons.Outlined.Image, "View in AntiGem", "Built-in viewer: zoom, save, share", recommended = true)
         FileKinds.isBrowsableArchive(entry.name) -> OpenOption(OpenChoice.PREVIEW, Icons.Outlined.Inventory2, "View contents", "See what is inside, then extract", recommended = k == FileKind.ARCHIVE)
         else -> null
     }
-    val list = listOfNotNull(ide, preview, external)
+    // sending the file to another app is always offered, last
+    val share = OpenOption(OpenChoice.SHARE, Icons.Outlined.Share, "Share", "Send it to another app", recommended = false)
+    val list = listOfNotNull(ide, preview, external, share)
     // exactly one recommendation, and it goes first
     val rec = list.firstOrNull { it.recommended } ?: list.first()
     return listOf(rec.copy(recommended = true)) + list.filter { it !== rec }.map { it.copy(recommended = false) }
@@ -285,7 +289,7 @@ internal fun OpenWithSheet(
             Spacer(Modifier.height(14.dp))
             options.forEach { o ->
                 Surface(
-                    onClick = { onChoose(o.choice, remember && ext.isNotBlank()) },
+                    onClick = { onChoose(o.choice, remember && ext.isNotBlank() && o.choice != OpenChoice.SHARE) },
                     shape = RoundedCornerShape(16.dp),
                     color = if (o.recommended) MaterialTheme.colorScheme.primary.copy(alpha = 0.10f) else MaterialTheme.colorScheme.surfaceContainerLow,
                     border = if (o.recommended) BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.45f)) else null,
@@ -513,13 +517,13 @@ internal fun NewProjectDialog(onCreate: suspend (name: String, template: String)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun DetailsSheet(entry: ExplorerEntry, onCopyPath: (String) -> Unit, onDismiss: () -> Unit) {
+internal fun DetailsSheet(entry: ExplorerEntry, onCopyPath: (String) -> Unit, onDismiss: () -> Unit, side: ExplorerSide = ExplorerSide.BRIDGE) {
     var stat by remember { mutableStateOf<ExplorerStat?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var reload by remember { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
     LaunchedEffect(entry.path, reload) {
-        FileExplorerApi.stat(entry.path).onSuccess { stat = it }.onFailure { error = it.message }
+        ExplorerSource.of(side).stat(entry.path).onSuccess { stat = it }.onFailure { error = it.message }
     }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 28.dp)) {
@@ -549,7 +553,8 @@ internal fun DetailsSheet(entry: ExplorerEntry, onCopyPath: (String) -> Unit, on
                 DetailRow("Permissions", "${s.mode}  (${s.modeOctal})", mono = true)
                 DetailRow("Access", listOfNotNull(if (s.readable) "read" else null, if (s.writable) "write" else null).joinToString(" + ").ifBlank { "none" })
                 if (s.symlinkTarget.isNotBlank()) DetailRow("Links to", s.symlinkTarget, mono = true)
-                if (!s.isDir) {
+                // the bridge's machine only (Android storage has no Unix permissions to change)
+                if (!s.isDir && side == ExplorerSide.BRIDGE) {
                     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text("Executable", fontSize = 14.sp, fontWeight = FontWeight.Medium)
@@ -622,12 +627,12 @@ private fun ChoiceButton(icon: ImageVector, title: String, subtitle: String, dan
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun ArchiveSheet(entry: ExplorerEntry, onExtractHere: () -> Unit, onExtractTo: () -> Unit, onDismiss: () -> Unit) {
+internal fun ArchiveSheet(entry: ExplorerEntry, onExtractHere: () -> Unit, onExtractTo: () -> Unit, onDismiss: () -> Unit, side: ExplorerSide = ExplorerSide.BRIDGE) {
     var entries by remember { mutableStateOf<List<ArchiveEntry>?>(null) }
     var truncated by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(entry.path) {
-        FileExplorerApi.archiveEntries(entry.path).onSuccess { entries = it.first; truncated = it.second }.onFailure { error = it.message }
+        ExplorerSource.of(side).archiveEntries(entry.path).onSuccess { entries = it.first; truncated = it.second }.onFailure { error = it.message }
     }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().fillMaxHeight(0.85f).padding(horizontal = 16.dp)) {

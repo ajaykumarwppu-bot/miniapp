@@ -96,8 +96,16 @@ class OpenCodeChatBackend(
     /** The bridge's last status answer (version, binary, error). */
     val status: StateFlow<OpenCodeStatus?> = _status.asStateFlow()
 
+    private val _allModels = MutableStateFlow<List<AiModel>>(emptyList())
+    /** Every model OpenCode offers, including the ones turned off in Settings → OpenCode → Providers. */
+    val allModels: StateFlow<List<AiModel>> = _allModels.asStateFlow()
     private val _availableModels = MutableStateFlow<List<AiModel>>(emptyList())
+    /** The models in the picker: [allModels] minus the turned-off models and providers. */
     val availableModels: StateFlow<List<AiModel>> = _availableModels.asStateFlow()
+    /** OpenCode's default model ("provider/model"), from the last model refresh. */
+    private var defaultModelId: String? = null
+    val hiddenModels: StateFlow<Set<String>> = prefs.hiddenModels
+    val hiddenProviders: StateFlow<Set<String>> = prefs.hiddenProviders
     private val _modelsError = MutableStateFlow<String?>(null)
     val modelsError: StateFlow<String?> = _modelsError.asStateFlow()
     private val _isRefreshingModels = MutableStateFlow(false)
@@ -345,20 +353,62 @@ class OpenCodeChatBackend(
                                 )
                             }
                             .sortedWith(compareBy({ !it.isDefault }, { it.baseName.lowercase() }, { it.displayName.lowercase() }))
-                        _availableModels.value = list
-                        _modelsError.value = if (list.isEmpty()) "No models: connect a provider in Settings → OpenCode." else null
-                        // the chat's model: what was picked before (if it still exists), else OpenCode's default
-                        val cur = _selectedModelId.value
-                        if (cur.isBlank() || list.none { it.id == cur }) {
-                            val pick = prefs.model.value.takeIf { p -> list.any { it.id == p } } ?: defaultId ?: list.firstOrNull()?.id.orEmpty()
-                            if (store.currentConversation.value?.agent != AgentKind.OPENCODE || store.currentConversation.value?.id !in createdSnapshot()) {
-                                _selectedModelId.value = pick
-                            }
-                        }
+                        _allModels.value = list
+                        defaultModelId = defaultId
+                        publishModels()
                     }
                     .onFailure { _modelsError.value = it.message }
             } finally {
                 _isRefreshingModels.value = false
+            }
+        }
+    }
+
+    /** The provider id of a "provider/model" id. */
+    fun providerOf(modelId: String): String = modelId.substringBefore('/')
+
+    fun isModelVisible(modelId: String): Boolean =
+        providerOf(modelId) !in prefs.hiddenProviders.value && modelId !in prefs.hiddenModels.value
+
+    /** Turns one model on or off in the picker. */
+    fun setModelEnabled(modelId: String, enabled: Boolean) {
+        prefs.setHiddenModels(if (enabled) prefs.hiddenModels.value - modelId else prefs.hiddenModels.value + modelId)
+        publishModels()
+    }
+
+    /** Turns a whole provider on or off in the picker; its models keep their own on/off for when it is back on. */
+    fun setProviderEnabled(providerId: String, enabled: Boolean) {
+        prefs.setHiddenProviders(if (enabled) prefs.hiddenProviders.value - providerId else prefs.hiddenProviders.value + providerId)
+        publishModels()
+    }
+
+    /** Turns every model of a provider on or off at once. */
+    fun setProviderModelsEnabled(providerId: String, enabled: Boolean) {
+        val ids = _allModels.value.map { it.id }.filter { providerOf(it) == providerId }.toSet()
+        prefs.setHiddenModels(if (enabled) prefs.hiddenModels.value - ids else prefs.hiddenModels.value + ids)
+        publishModels()
+    }
+
+    /**
+     * Puts the turned-on models of [allModels] in the picker, and picks the chat's model again when it is gone:
+     * what was picked before (if still there), else OpenCode's default, else the first one.
+     */
+    private fun publishModels() {
+        val all = _allModels.value
+        val list = all.filter { isModelVisible(it.id) }
+        _availableModels.value = list
+        _modelsError.value = when {
+            all.isEmpty() -> "No models: connect a provider in Settings → OpenCode."
+            list.isEmpty() -> "All models are turned off: turn some on in Settings → OpenCode → Providers."
+            else -> null
+        }
+        val cur = _selectedModelId.value
+        if (cur.isBlank() || list.none { it.id == cur }) {
+            val pick = prefs.model.value.takeIf { p -> list.any { it.id == p } }
+                ?: defaultModelId?.takeIf { d -> list.any { it.id == d } }
+                ?: list.firstOrNull()?.id.orEmpty()
+            if (store.currentConversation.value?.agent != AgentKind.OPENCODE || store.currentConversation.value?.id !in createdSnapshot()) {
+                _selectedModelId.value = pick
             }
         }
     }
@@ -377,8 +427,12 @@ class OpenCodeChatBackend(
 
     suspend fun refreshSessions() {
         val res = client.get("/session?limit=200&parentID=null").getOrElse { return }
+        // sub-agent sessions (made by the task tool) have a parentID: the sidebar nests them under their chat
+        val all = client.get("/session?limit=300").getOrNull()
         val active = client.get("/session/active").getOrNull().obj().o("data")
-        val list = res.obj().a("data").orEmpty().mapNotNull { it.obj() }.mapNotNull { s -> conversationOf(s, active) }
+        val roots = res.obj().a("data").orEmpty().mapNotNull { it.obj() }
+        val children = all.obj().a("data").orEmpty().mapNotNull { it.obj() }.filter { !it.str("parentID").isNullOrBlank() }
+        val list = (roots + children).mapNotNull { s -> conversationOf(s, active) }.distinctBy { it.id }
         backendScope.launch(worker) {
             synchronized(created) { list.forEach { created.add(it.id) } }
             running.clear()
@@ -411,7 +465,10 @@ class OpenCodeChatBackend(
             updatedAt = s.o("time").long("updated") ?: 0L,
             isRunning = active?.containsKey(id) == true,
             workspaceUri = if (dir.isBlank()) "" else "file://$dir",
-            parentConversationId = s.str("parentID"),
+            parentConversationId = s.str("parentID")?.takeIf { it.isNotBlank() },
+            // a sub-agent session is named after its task; the agent that ran it (e.g. "explore") labels it
+            subagentRole = s.str("parentID")?.takeIf { it.isNotBlank() }?.let { s.str("title")?.takeIf { t -> t.isNotBlank() } ?: s.str("agent") },
+            subagentTypeName = s.str("parentID")?.takeIf { it.isNotBlank() }?.let { s.str("agent") },
             agent = AgentKind.OPENCODE,
             archived = s.o("time").long("archived") != null
         )
@@ -502,7 +559,8 @@ class OpenCodeChatBackend(
         for (f in forms) {
             if (f.o("state").str("status")?.let { it != "pending" } == true) continue
             val fid = f.str("id") ?: continue
-            transcript.addForm(OpenCodeTranscript.Form(fid, id, f.str("title").orEmpty(), f.a("fields").orEmpty().mapNotNull { it.obj() }))
+            transcript.addForm(OpenCodeTranscript.Form(fid, id, f.str("title").orEmpty(), f.a("fields").orEmpty().mapNotNull { it.obj() },
+                f.o("metadata") ?: JsonObject(emptyMap())))
         }
         sessionInfo?.let { s ->
             OpenCodeTranscript.modelRef(s.o("model"))?.let { _selectedModelId.value = it }
@@ -830,9 +888,11 @@ class OpenCodeChatBackend(
         backendScope.launch(worker) {
             val form = transcript.pendingForms.values.firstOrNull { OpenCodeTranscript.formToolId(it.id) == toolCall.id } ?: return@launch
             val answer = buildJsonObject {
-                for (r in responses) {
+                // the answers come in the order of the questions (two questions may have the same text)
+                val byPosition = responses.size == form.questionKeys.size
+                for ((i, r) in responses.withIndex()) {
                     if (r.skipped == true) continue
-                    val key = form.keyByPrompt[r.question] ?: continue
+                    val key = (if (byPosition) form.questionKeys[i] else null) ?: form.keyByPrompt[r.question] ?: continue
                     val field = form.fields.firstOrNull { it.str("key") == key } ?: continue
                     val picked = r.selectedOptionIds.orEmpty()
                     val write = r.writeInResponse?.trim().orEmpty()

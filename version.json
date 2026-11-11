@@ -1,12 +1,12 @@
 {
-  "version_code": 129,
-  "version_name": "1.1.9",
+  "version_code": 130,
+  "version_name": "1.1.10",
   "min_supported_version_code": 1,
   "changelog": [
-    "Fixed the separate app installing only the 55 MB Ubuntu rootfs: AntiGem+ now installs the full ~350 MB Termux bootstrap with agy and all agent binaries, exactly like the original app",
-    "Fixed 'agy is not installed at /root/.local/bin/agy': the app now recognizes its own package as a termux-style environment and uses the correct agy/bridge/claude binary paths",
-    "Fixed 'CANNOT LINK EXECUTABLE' and 'Permission denied' under the com.antigemplus package: hardcoded com.termux paths in the rootfs are rewritten at install time (730+ scripts, 400+ symlinks), and every process spawn gets the correct library path and termux-exec prefix",
-    "termux-api commands (toast, vibrate, torch...) now target this app's own receiver instead of the original AntiGem"
+    "Merged the upstream 1.1.8 release: Connect to PC (pair the phone with VS Code on your PC and use the same chats live on both), folder tabs in Files, Claude Code subagents in the side bar, OpenCode questions and model visibility fixes, WebView DevTools and network logging, and a reliable local server restart",
+    "Fixed custom MCP servers (like Google Flow MCP) failing with 'initialize rejected by transport': MCP startup now uses the app's own ports and package paths instead of the original AntiGem's",
+    "Fixed Codex not downloading: the Codex installer now resolves the right binary paths and download location inside AntiGem+",
+    "Fixed 'failed to connect to AGI hub (Expected gRPC but was 404)' when running the agent on the cloud"
   ],
   "is_critical": false
 }

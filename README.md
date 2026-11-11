@@ -1,15 +1,35 @@
 <div align="center">
 
+<img src="docs/readme/icon.svg" alt="AntiGem app icon" width="112">
+
 # AntiGem
 
-**An AI coding workspace for Android: Antigravity, Claude Code and OpenCode agents, a real Linux terminal, a code editor and a browser the agent can control, all in one app.**
+*A gem that defies gravity. A full coding environment, light enough to carry in your pocket.*
+
+**An AI coding workspace for Android: Antigravity, Claude Code, OpenCode and Codex agents, a real Linux terminal, a code editor and a browser the agent can control, all in one app.**
 
 [![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?style=flat-square&logo=kotlin&logoColor=white)](https://developer.android.com/jetpack/compose)
 [![Go](https://img.shields.io/badge/Bridge-Go-00ADD8?style=flat-square&logo=go&logoColor=white)](https://go.dev)
 [![License](https://img.shields.io/badge/License-GPLv3-blue?style=flat-square)](LICENSE)
 [![Releases](https://img.shields.io/github/v/release/santoshkurmi/antigem?style=flat-square&label=Download)](https://github.com/santoshkurmi/antigem/releases)
 
-[Download](https://github.com/santoshkurmi/antigem/releases) · [Website](https://santoshkurmi.github.io/antigem/) · [Plugin SDK](extension_docs/README.md) · [User Guide](user_docs/README.md) · [WhatsApp community](https://chat.whatsapp.com/IGQX8q9zSVV0RarG70sclV?s=cl&p=a&mlu=4&ilr=4)
+[Download](https://github.com/santoshkurmi/antigem/releases) · [Website](https://santoshkurmi.github.io/antigem/) · [VS Code extension](https://github.com/Santoshkurmi/antigem_vscode_extension) · [Plugin SDK](extension_docs/README.md) · [User Guide](user_docs/README.md) · [WhatsApp community](https://chat.whatsapp.com/IGQX8q9zSVV0RarG70sclV?s=cl&p=a&mlu=4&ilr=4)
+
+<br>
+
+<img src="docs/readme/hero.webp" alt="AntiGem on a phone: code editor, live browser preview, Claude Code chat, Linux terminal and model picker" width="100%">
+
+</div>
+
+---
+
+## See it in action
+
+<div align="center">
+
+A full tour on a real phone: launch, chats, settings and themes, then Claude Code builds an animated solar system from one prompt, and it runs in the app's own terminal and browser. Real recording, sped up.
+
+<video src="https://github.com/user-attachments/assets/821731b9-9713-4988-b358-09dc62aef006" width="360" controls autoplay loop muted playsinline></video>
 
 </div>
 
@@ -19,16 +39,31 @@
 
 <table>
   <tr>
-    <td align="center" width="25%"><img src="docs/resources/chat_screen.jpg" alt="Agent chat" width="200"><br><sub>Agent chat</sub></td>
-    <td align="center" width="25%"><img src="docs/resources/ide_code_editor.jpg" alt="Code editor" width="200"><br><sub>Code editor</sub></td>
-    <td align="center" width="25%"><img src="docs/resources/linux_terminal.jpg" alt="Linux terminal" width="200"><br><sub>Linux terminal</sub></td>
-    <td align="center" width="25%"><img src="docs/resources/integrated_browser.jpg" alt="Built-in browser" width="200"><br><sub>Built-in browser</sub></td>
+    <td colspan="4" align="center"><b>🤖 Agents that actually code</b></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/resources/sidebar_navigation.jpg" alt="Chat history" width="200"><br><sub>Chat history</sub></td>
-    <td align="center"><img src="docs/resources/account_profile_quota.jpg" alt="Account and quota" width="200"><br><sub>Account &amp; quota</sub></td>
-    <td align="center"><img src="docs/resources/settings_preferences.jpg" alt="Settings" width="200"><br><sub>Settings</sub></td>
-    <td></td>
+    <td align="center" width="25%"><img src="docs/readme/screens/agent_picker.webp" alt="Pick Antigravity, Claude Code, OpenCode or Codex" width="200"><br><sub>Four agents, one app</sub></td>
+    <td align="center" width="25%"><img src="docs/readme/screens/chat_agent_working.webp" alt="Claude Code working: thinking, to-do list and file edits" width="200"><br><sub>Thinking, to-dos and live edits</sub></td>
+    <td align="center" width="25%"><img src="docs/readme/screens/chat_agent_summary.webp" alt="Claude Code summary with token stats" width="200"><br><sub>Tool cards and token stats</sub></td>
+    <td align="center" width="25%"><img src="docs/readme/screens/model_picker_usage.webp" alt="Model picker with 5-hour and weekly plan usage" width="200"><br><sub>Models and plan usage</sub></td>
+  </tr>
+  <tr>
+    <td colspan="4" align="center"><b>🛠️ Build, run and preview on the phone</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/readme/screens/code_editor.webp" alt="Code editor with tabs and syntax highlighting" width="200"><br><sub>Code editor</sub></td>
+    <td align="center"><img src="docs/readme/screens/terminal_fastfetch.webp" alt="Linux terminal running fastfetch and a web server" width="200"><br><sub>Real Linux terminal</sub></td>
+    <td align="center"><img src="docs/readme/screens/browser_live_preview.webp" alt="Built-in browser previewing the app the agent built" width="200"><br><sub>Live preview in the browser</sub></td>
+    <td align="center"><img src="docs/readme/screens/solar_system.webp" alt="Animated solar system the agent built from one prompt" width="200"><br><sub>Built from one prompt</sub></td>
+  </tr>
+  <tr>
+    <td colspan="4" align="center"><b>⚙️ Make it yours</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/readme/screens/themes_light.webp" alt="Theme gallery with light and dark themes" width="200"><br><sub>Light and dark themes</sub></td>
+    <td align="center"><img src="docs/readme/screens/settings.webp" alt="Settings" width="200"><br><sub>Settings</sub></td>
+    <td align="center"><img src="docs/readme/screens/mcp_presets.webp" alt="One-tap MCP server presets" width="200"><br><sub>One-tap MCP servers</sub></td>
+    <td align="center"><img src="docs/readme/screens/jarvis_settings.webp" alt="Jarvis voice assistant settings" width="200"><br><sub>Jarvis voice assistant</sub></td>
   </tr>
 </table>
 
@@ -36,19 +71,38 @@
 
 ## What it is
 
-AntiGem runs three coding agents on your phone:
+AntiGem runs four coding agents on your phone:
 
-- **Antigravity (`agy`)**: the app talks to the `agy` language server directly over gRPC.
+- **Antigravity (`agy`)**: Google's official `agy` CLI, installed with Google's own installer, runs inside the app's Linux environment.
 - **Claude Code**: Anthropic's official `claude` CLI runs inside the app's Linux environment, and the app talks to it over its stream-json protocol, with one CLI process per chat.
 - **OpenCode**: the open-source coding agent. It works with 200+ providers with your own keys, any OpenAI-compatible API, and free models.
+- **Codex**: OpenAI's official `codex` CLI runs inside the app's Linux environment, and the app talks to it through its `app-server` protocol, the same one the Codex VS Code extension uses. Sign in with your ChatGPT account.
 
-You can turn on any of the three agents, on first launch or later in **Settings → Agents**. An agent you turn off does not run.
+You can turn on any of the four agents, on first launch or later in **Settings → Agents**. An agent you turn off does not run.
 
-The app reads each agent's structured protocol, not its terminal output. That is how it shows streaming replies, tool approvals, the agent's questions, subagents and file changes as normal chat UI.
+**Use the models you want:** OpenCode connects to 200+ providers, including local models with Ollama or LM Studio, and Claude Code can run on OpenRouter, Kimi, DeepSeek, Z.ai (GLM) or any Anthropic-compatible API. See [Bring your own models](#bring-your-own-models-third-party-providers).
+
+The app reads each agent's structured output, not its terminal text. That is how it shows streaming replies, tool approvals, the agent's questions, subagents and file changes as normal chat UI.
 
 ---
 
 ## Features
+
+### Bring your own models: third-party providers
+You are not tied to one company's models. Two of the agents can use other providers with your own keys, and their models show in the same model picker as everything else.
+
+**OpenCode: 200+ providers**
+- Quick sign-in for the subscriptions people use most: ChatGPT / OpenAI, GitHub Copilot, your Claude subscription, SuperGrok / xAI, OpenCode Zen and Go, OpenRouter and the Anthropic API. Hundreds more are one search away, with an API key or a browser / device-code sign-in.
+- **Any OpenAI-compatible or Anthropic-compatible API** by its address: local models with Ollama or LM Studio, vLLM, LiteLLM, or a company gateway.
+- OpenCode's own free models work with no account at all.
+- Choose which providers and models appear in the picker: switch them on or off one by one, or all at once.
+
+**Claude Code: Anthropic-compatible providers**
+- One-tap presets for **OpenRouter, Kimi (Moonshot), DeepSeek and Z.ai (GLM)**, plus any other Anthropic-compatible API with its base URL and key.
+- Test the connection, then fetch the provider's model list. For OpenRouter you can fetch only the free models that can call tools.
+- Their models sit in the model picker next to Claude's own, so you can switch per chat.
+
+Antigravity uses your Google account and Codex your ChatGPT account.
 
 ### Agents and chat
 - Live streaming replies, collapsible thinking, tool cards, diffs and subagent progress.
@@ -57,11 +111,12 @@ The app reads each agent's structured protocol, not its terminal output. That is
 - Image and file attachments, voice dictation, and audio playback.
 - Edit or regenerate a message, fork, rename, share, export and delete chats.
 - Slash commands, plus your own custom slash commands that expand into full prompts.
+- **Global context**: tell every chat, in every agent, about the app and your own standing instructions.
 - Markdown, syntax-highlighted code, Mermaid diagrams and an artifacts drawer.
 - A floating chat bubble you can use over other apps.
 
 ### Jarvis voice assistant
-Use the whole app hands-free by voice, on top of Antigravity, Claude Code or OpenCode. Full guide: **[docs/jarvis.md](docs/jarvis.md)**.
+Use the whole app hands-free by voice, on top of Antigravity, Claude Code, OpenCode or Codex. Full guide: **[docs/jarvis.md](docs/jarvis.md)**.
 - Open projects and files, switch screens, models and settings (theme too), search code, read chats, check your usage, set timers, and ask how the app works.
 - **Tasks:** hand over big jobs ("fix the failing tests and tell me when it's done"). Each runs in its own chat; Jarvis tells you when it finishes, fails, gets stuck, needs an approval or asks a question, and you can redirect or stop it by voice.
 - Approvals read out loud and answered by voice, with policies from "ask me each time" to "auto except risky".
@@ -78,16 +133,26 @@ Use the whole app hands-free by voice, on top of Antigravity, Claude Code or Ope
 - Settings for chat defaults, permission rules, the command sandbox, MCP servers, plugins and marketplaces, `CLAUDE.md` and Claude's memory.
 
 ### Antigravity
-- Direct gRPC connection to the `agy` daemon.
+- Runs Google's official `agy` CLI.
 - Model picker with live quota, Google sign-in and account details.
 - Security presets and per-project rules for command auto-run and file access.
 - MCP servers, skills and Google plugins.
+- **Cloud agents**: run Antigravity chats on a Google cloud machine (Remote Agents) instead of the phone.
 
 ### OpenCode
 - The open-source coding agent, run through the bridge: its own CLI and its own providers.
 - Sign in to a provider with an API key, a device-code / browser sign-in, or credentials already on the machine.
-- **Custom providers**: add any OpenAI-compatible endpoint with your own base URL and key; free models work too. Its models show in the model picker like the other agents.
+- **Custom providers**: add any OpenAI-compatible endpoint (Ollama, LM Studio, vLLM, LiteLLM…) or Anthropic-compatible one with your own base URL and key; free models work too. Its models show in the model picker like the other agents. See [Bring your own models](#bring-your-own-models-third-party-providers).
 - Settings for the server, providers, endpoints, MCP servers and approvals: **Settings → OpenCode** ("Server, providers, custom OpenAI-compatible endpoints & approvals").
+
+### Codex
+- Runs OpenAI's official `codex` CLI.
+- Install and update it from **Settings → Codex → Server & install**: on the phone that is the Termux package (`pkg install codex`); on a server, the official Linux build from Codex's GitHub releases.
+- Sign in with your ChatGPT account, in the browser or with a device code.
+- Usage at a glance: your plan's limits and when they reset.
+- Permissions for new chats: what Codex asks before it runs commands or edits files. Approvals are answered inside the chat.
+- Plan mode, `/review` of uncommitted changes, `/compact`, `/fork`, and messages you send while Codex is working are queued for the next turn.
+- MCP servers: the built-in presets and your own local (command) or remote (HTTP) servers.
 
 ### Built-in MCP servers
 Each one is a one-tap preset in **Settings → MCP Servers**, for every agent.
@@ -103,6 +168,16 @@ Each one is a one-tap preset in **Settings → MCP Servers**, for every agent.
 | **Jarvis** | Control the app for the Jarvis voice mode: speak and ask, run and watch tasks, chats, models, settings, approvals, the IDE and more ([docs/jarvis.md](docs/jarvis.md)). |
 | **Theme** | List, switch, create, edit, import and export the app's color themes. |
 | **Stitch** | Google Stitch UI design, with your own API key. |
+| **REA** | Reverse engineering: analyze APKs, Flutter, React Native and native code. Set it up first in **Settings → REA** (see [Reverse engineering](#reverse-engineering-rea)). |
+
+### Reverse engineering (REA)
+- **Settings → REA** installs [REA](https://github.com/morluto/rea) in an Ubuntu environment inside the app, then any agent can use it through the REA MCP preset.
+- The agent can unpack and decompile APKs, and dig into Flutter, React Native and native libraries.
+- Two modes: **on demand** (recommended: the agent gets 4 small tools and looks up only the REA tools it needs, which keeps the context small) or **direct** (every tool listed up front). Tool groups let you show only the tools you want.
+
+### Build Android apps on the phone
+- **Settings → Android Development** sets up everything to build **Kotlin / Jetpack Compose, Flutter and React Native** apps on the phone itself, and the agent can drive the builds.
+- Builds target arm64 phones. For other CPU types, build on a PC.
 
 ### Custom AntiGem plugins
 - Plugins are small packages with a `manifest.json` and a JavaScript worker that add MCP tools, and can include Markdown **skills** that teach the agent how to use them.
@@ -123,10 +198,21 @@ Each one is a one-tap preset in **Settings → MCP Servers**, for every agent.
 - Tabs, line numbers, find and replace, undo and redo, auto-indent and a file explorer.
 - Run commands from the editor in a terminal sheet with Ctrl keys.
 - Git: clone, status, diffs, commit, pull and push from a source control view.
+- **GitHub**: sign in with the GitHub CLI from **Settings → GitHub**, browse your repositories, and set up git credentials.
 
 ### Browser
 - In-app browser for previewing local dev servers and testing web apps.
 - Desktop and mobile modes, a steady browser identity that keeps Google sign-in working, and built-in Eruda DevTools.
+
+### Connect to PC (with AntiGem for VS Code)
+Use the agents running on your PC from your phone. [AntiGem for VS Code](https://github.com/Santoshkurmi/antigem_vscode_extension) runs them on the PC, and the app becomes a second screen for the same chats.
+- **Same chats on both:** start a chat in VS Code and continue it on the phone, or the other way round. Replies stream live on both, and every agent (Antigravity, Claude Code, Codex, OpenCode) works, with its subagents, images and files.
+- **Pair once, no typing of addresses:** in VS Code open **Settings → Connect phone → Start pairing**. On the phone, turn on **Settings → Connect to PC**, tap **Add a PC**, pick the PC from **Nearby PCs** and type the 6-digit code it shows. If the PC is not listed (guest Wi-Fi), type the address shown on the PC.
+- **Switch in one tap:** the PC button in the side bar lists your paired PCs; pick one, or go back to **Use this phone**. Several PCs can be paired.
+- **Copy files between phone and PC:** in this mode the Files screen has a **This phone** tab next to the PC's files. Copy or cut on one side, paste on the other, folders too.
+- **Terminal on the PC (optional):** with **Allow terminal from phone** on in VS Code, the app's terminal and Run configurations open on the PC. Off (the default), they stay on the phone.
+- **Secure by design:** the phone connects over SSH with its own key; no PC password is stored. The code is checked with SPAKE2, so nobody on the Wi-Fi can learn it. The key can only reach AntiGem on the PC (plus a shell if you allow the terminal). Remove a phone in VS Code to lock it out at once.
+- **What the PC needs:** AntiGem for VS Code, and its SSH server turned on (Linux: `openssh-server`; macOS: *Remote Login*; Windows: the *OpenSSH Server* feature). VS Code shows the steps for your system.
 
 ### Notes
 - Notes and to-do lists inside the app and in the floating bubble.
@@ -148,7 +234,7 @@ Get the latest APK from [Releases](https://github.com/santoshkurmi/antigem/relea
 | :--- | :--- | :---: | :--- |
 | **`termux`** (recommended) | `com.termux` | No | Self-contained: the app sets up its own Linux environment. This is the one published in releases. |
 | **`standard`** | `com.antigem` | Yes | You run `agy_ide_bridge` inside a separately installed Termux app, and AntiGem connects to it over localhost. Not published; build it yourself from source. |
-| **Server mode** (a mode, not a third build) | the same as the build you installed (`com.termux` or `com.antigem`) | No | The bridge, the agents (`agy`, Claude Code, OpenCode), your projects and the terminal run on **your own server (a VPS)**, and the phone is only the screen. Switch it on in **Settings → Servers**. Works with both variants. See [Server mode](#server-mode-run-it-on-a-vps) below. |
+| **Server mode** (a mode, not a third build) | the same as the build you installed (`com.termux` or `com.antigem`) | No | The bridge, the agents (`agy`, Claude Code, OpenCode, Codex), your projects and the terminal run on **your own server (a VPS)**, and the phone is only the screen. Switch it on in **Settings → Servers**. Works with both variants. See [Server mode](#server-mode-run-it-on-a-vps) below. |
 
 > [!NOTE]
 > The `standard` variant is not deprecated, but it gets little attention because almost nobody uses it. Some features, such as the Browser MCP, may not work in it right now, and it may be dropped in the future. Use the `termux` variant.
@@ -222,20 +308,24 @@ Then open Termux:X11. Don't install `termux-x11-nightly` from x11-repo: it only 
 ## How it works
 
 ```
-┌──────────────────────────────────────────────────────────┐
-│                    AntiGem Android app                   │
-│     Compose UI · terminal · editor · browser · MCPs      │
-└────────────────────────────┬─────────────────────────────┘
-                             │  gRPC / WebSocket (localhost)
-┌────────────────────────────▼─────────────────────────────┐
-│                agy_ide_bridge (Go, local)                │
-│     Git · files · Claude Code relay · plugin manager     │
-└───────────────┬──────────────────────────┬───────────────┘
-                │ gRPC                     │ stream-json
-┌───────────────▼─────────────┐ ┌──────────▼───────────────┐
-│  Antigravity (agy) daemon   │ │  Claude Code CLI         │
-│                             │ │  (one process per chat)  │
-└─────────────────────────────┘ └──────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│                           AntiGem Android app                            │
+│         Compose UI · terminal · editor · browser · MCPs · Jarvis         │
+└───────────────────────┬─────────────────────────────────┬────────────────┘
+                        │ HTTP / WebSocket                │ HTTP / WS
+                        │ localhost:1234                  │ localhost:1235
+┌───────────────────────┴────────────────────────┐   ┌────┴────────────────┐
+│              agy_ide_bridge (Go)               │   │   Antigravity hub   │
+│      Git · files · plugins · agent relays      ├──►│      agy --hub      │
+│       starts and supervises every agent        │   │  (Google's agy CLI) │
+└───────┬──────────────────┬──────────────────┬──┘   └─────────────────────┘
+        │ stream-json      │ HTTP + SSE       │ JSON-RPC (stdio)
+        │                  │                  │
+┌───────┴────────┐ ┌───────┴────────┐ ┌───────┴────────┐
+│  Claude Code   │ │    OpenCode    │ │     Codex      │
+│  one process   │ │   one shared   │ │   one shared   │
+│    per chat    │ │ opencode serve │ │codex app-server│
+└────────────────┘ └────────────────┘ └────────────────┘
 ```
 
 ---
@@ -326,7 +416,7 @@ APKs are written to `app/build/outputs/apk/<variant>/<buildType>/` and `build/ou
 antigem/
 ├── app/src/main/
 │   ├── java/com/example/gemini/
-│   │   ├── data/          # Agent backends (agy, claude, opencode), terminal, ADB, automation, notes, updater
+│   │   ├── data/          # Agent backends (agy, claude, opencode, codex), terminal, ADB, automation, notes, updater
 │   │   ├── domain/        # Chat models and parsing
 │   │   └── ui/            # Compose screens: chat, IDE, browser, notes, settings
 │   ├── java/com/termux/   # Termux terminal-view widget and com.termux service entry points
@@ -334,30 +424,21 @@ antigem/
 ├── agy_ide_bridge/        # Go bridge: agy hub, Claude Code relay, Git, plugins
 ├── extensions/            # Bundled plugins
 ├── extension_docs/        # Plugin SDK documentation and examples
-├── proto_generator/       # Protobuf definitions and generators for the agy API
 ├── scripts/               # Build, backup and restore scripts
 └── version.json           # Version and changelog used by the in-app updater
 ```
 
-### Adding an agy RPC
-
-Do not edit `app/src/main/proto/LanguageServerService.proto` by hand. It is generated from the full daemon proto in
-`proto_generator/protos/`, filtered down to the RPCs the app uses.
-
-1. Add the RPC name (one per line) to `proto_generator/proto_filters/LanguageServerService.proto.filter`.
-2. Run the filter from `proto_generator/`:
-
-   ```bash
-   cd proto_generator
-   python3 filter_proto.py --copy
-   ```
-
-   It keeps the listed RPCs plus every message and enum they need, and copies the result to `app/src/main/proto/`.
-   Without `--copy` it asks before copying.
-3. Rebuild the app. Wire generates the new call (for example `AgyLanguageService.UpdateConversationAnnotations()`)
-   and its request/response classes.
-
 ---
+
+## Related projects
+
+AntiGem comes in three parts that link to each other:
+
+| Project | What it is | Repository |
+|---|---|---|
+| **AntiGem** (Android app) | The coding agents, a Linux terminal, an editor and a browser on your phone. With **Connect to PC** it also uses the agents of a PC that runs AntiGem for VS Code. | [Santoshkurmi/antigem](https://github.com/Santoshkurmi/antigem) |
+| **AntiGem for VS Code** | The same agents and chat in a VS Code sidebar. Its **Connect phone** lets the app on your phone use them. | [Santoshkurmi/antigem_vscode_extension](https://github.com/Santoshkurmi/antigem_vscode_extension) · install: [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=santoshkurmi.antigem-vscode-extension), [Open VSX](https://open-vsx.org/extension/santoshkurmi/antigem-vscode-extension) |
+| **AntiGem Browser Bridge** (Chrome extension) | Lets agents in AntiGem for VS Code use your real Chrome. Not needed by the Android app, which has its own browser. | [Santoshkurmi/antigem-browser-extension](https://github.com/Santoshkurmi/antigem-browser-extension) · not in the Chrome Web Store yet: installed with *Load unpacked* from AntiGem for VS Code |
 
 ## Contributing
 
@@ -366,6 +447,14 @@ Issues, ideas and pull requests are welcome. For help, join the [WhatsApp commun
 ## Analytics
 
 AntiGem uses [TelemetryDeck](https://telemetrydeck.com) only to count how many people use the app. It records app opens, an anonymous install ID, session counts, and general device details (phone model, Android version, app version). It does **not** collect chats, prompts, code, files, terminal output, account emails or API keys. Debug builds are marked as test data.
+
+## Disclaimer
+
+AntiGem is an independent project. It is not affiliated with, endorsed by or sponsored by Google, Anthropic, OpenAI, OpenCode or any other AI provider. Antigravity, Claude, Claude Code, Codex and other product names are trademarks of their owners and are used here only to say which tools the app works with.
+
+AntiGem does not include these tools. You install each one from its official source and sign in with that tool's own login, and the app gives you an interface on top of it. Your use of each tool and account is covered by that provider's own terms, the same as when you use the tool from a terminal.
+
+AntiGem is free software, provided as is, without warranty, as described in the [license](LICENSE).
 
 ## License
 

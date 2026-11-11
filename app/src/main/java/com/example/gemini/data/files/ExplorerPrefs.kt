@@ -9,7 +9,8 @@ import org.json.JSONArray
 
 enum class SortBy(val label: String) { NAME("Name"), DATE("Date modified"), SIZE("Size"), TYPE("Type") }
 
-enum class OpenChoice(val label: String) { IDE("Code editor"), EXTERNAL("Other app"), PREVIEW("Preview") }
+/** [SHARE] is never remembered as a file type's default: it sends the file, it does not open it. */
+enum class OpenChoice(val label: String) { IDE("Code editor"), EXTERNAL("Other app"), PREVIEW("Preview"), SHARE("Share") }
 
 data class ExplorerSettings(
     val sortBy: SortBy = SortBy.NAME,
@@ -62,6 +63,29 @@ object ExplorerPrefs {
     fun setLastPath(key: String, path: String) {
         lastPaths[key] = path
         prefs?.edit()?.putString("last_path_$key", path)?.apply()
+    }
+
+    // ----- tabs of the Files screen -----
+
+    /** The saved tabs ([side name] to [folder]) and which one was open. */
+    fun tabs(key: String): Pair<List<Pair<String, String>>, Int> {
+        val raw = prefs?.getString("tabs_$key", null) ?: return emptyList<Pair<String, String>>() to 0
+        return runCatching {
+            val arr = org.json.JSONArray(raw)
+            (0 until arr.length()).map { arr.getJSONObject(it).let { o -> o.getString("side") to o.getString("path") } }
+        }.getOrDefault(emptyList()) to (prefs?.getInt("tabs_active_$key", 0) ?: 0)
+    }
+
+    fun setTabs(key: String, tabs: List<Pair<String, String>>, active: Int) {
+        val arr = org.json.JSONArray(tabs.map { (s, p) -> org.json.JSONObject().put("side", s).put("path", p) })
+        prefs?.edit()?.putString("tabs_$key", arr.toString())?.putInt("tabs_active_$key", active)?.apply()
+    }
+
+    /** Phone-only mode: tabs turned on with the toolbar button (server / PC mode always has them). */
+    fun tabMode(key: String): Boolean = prefs?.getBoolean("tab_mode_$key", false) ?: false
+
+    fun setTabMode(key: String, on: Boolean) {
+        prefs?.edit()?.putBoolean("tab_mode_$key", on)?.apply()
     }
 
     // ----- "Always open .ext with …" -----

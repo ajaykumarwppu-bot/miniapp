@@ -81,7 +81,6 @@ class MainActivity : ComponentActivity() {
         com.example.gemini.data.remote.AndroidLocalBridgeServer.instance.start(this)
         com.example.gemini.data.jarvis.JarvisController.attach(application, chatViewModel)
         com.example.gemini.data.agent.ChatCompletionMonitor.start(application, chatViewModel)
-        handleOAuthIntent(intent)
         handleIncomingFileIntent(intent)
         handleJarvisIntent(intent)
 
@@ -428,6 +427,8 @@ class MainActivity : ComponentActivity() {
                                     if (hasEverOpenedFiles) {
                                         com.example.gemini.ui.files.FileExplorer(
                                             stateKey = "screen",
+                                            // server / PC: a "This phone" tab too, to copy and move files between them
+                                            allowPhoneTab = true,
                                             isVisible = currentViewMode == AppViewMode.FILES,
                                             onClose = {
                                                 currentViewMode =
@@ -637,7 +638,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        handleOAuthIntent(intent)
         handleIncomingFileIntent(intent)
         handleJarvisIntent(intent)
     }
@@ -666,16 +666,6 @@ class MainActivity : ComponentActivity() {
         window.decorView.postDelayed({
             if (com.example.gemini.data.jarvis.JarvisController.isAttached) com.example.gemini.data.jarvis.JarvisController.startListening()
         }, 700)
-    }
-
-    private fun handleOAuthIntent(intent: Intent?) {
-        val uri = intent?.data ?: return
-        if (uri.scheme == "http" || uri.scheme == "https" || uri.scheme == "gemini") {
-            val code = uri.getQueryParameter("code")
-            if (code != null) {
-                chatViewModel.handleOAuthCode(code)
-            }
-        }
     }
 
     /**

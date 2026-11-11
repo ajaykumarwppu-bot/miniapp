@@ -1,6 +1,11 @@
 package com.example.gemini.ui.claude
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -14,11 +19,17 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.offset
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.material.icons.automirrored.filled.CallSplit
+import androidx.compose.material.icons.outlined.SmartToy
+import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.AccountTree
 import androidx.compose.material.icons.outlined.Bolt
 import androidx.compose.material.icons.outlined.DataUsage
 import androidx.compose.material.icons.outlined.Lightbulb
@@ -93,7 +104,11 @@ private fun compactTokens(n: Long): String = when {
 fun ClaudeControlsStrip(
     backend: ClaudeChatBackend,
     prefs: ClaudePreferences,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** Subagents this chat started (and theirs), newest first: the agents chip, shown once there is one. */
+    subagents: List<com.example.gemini.domain.model.Conversation> = emptyList(),
+    /** Opens a subagent's chat (Back returns here). */
+    onOpenSubagent: (String) -> Unit = {}
 ) {
     val mode by backend.permissionMode.collectAsState()
     val effort by backend.effort.collectAsState()
@@ -154,6 +169,9 @@ fun ClaudeControlsStrip(
             )
         }
 
+        // this chat's subagents: how many are working now; tap for the list
+        if (subagents.isNotEmpty()) SubagentsChip(subagents, onOpenSubagent)
+
         // thinking
         ControlChip(
             text = if (thinking) "Thinking" else "No thinking",
@@ -174,6 +192,7 @@ fun ClaudeControlsStrip(
                 onClick = { showCache = true }
             )
         }
+
 
         // context window
         context?.let { ctx ->
@@ -672,4 +691,214 @@ fun ClaudeProviderSwitchDialog(backend: ClaudeChatBackend) {
             }
         }
     )
+}
+
+
+/** In place of the input in a subagent's chat: it can be read, not continued. */
+@Composable
+fun ReadOnlySubagentNote(agentType: String?, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 14.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    ) {
+        Row(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Outlined.AccountTree, null, tint = ClaudeAccent, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(
+                text = (agentType?.takeIf { it.isNotBlank() }?.let { "$it subagent" } ?: "Subagent") +
+                    " · read only. It worked for the chat it is listed under; continue there.",
+                fontSize = 12.5.sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+            )
+        }
+    }
+}
+
+
+/**
+ * "2 agents" with a green dot while some of this chat's subagents work, "0 agents" with a white dot when none does.
+ * Tapping lists them all; picking one opens its (read-only) chat.
+ */
+@Composable
+private fun SubagentsChip(subagents: List<com.example.gemini.domain.model.Conversation>, onOpen: (String) -> Unit) {
+    val running = subagents.count { it.isRunning }
+    val green = com.example.gemini.theme.AppColors.success
+    val color = if (running > 0) green else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+    var open by remember { mutableStateOf(false) }
+    Box {
+        Surface(
+            modifier = Modifier.clip(RoundedCornerShape(14.dp)).clickable { open = true },
+            shape = RoundedCornerShape(14.dp),
+            color = if (running > 0) green.copy(alpha = 0.14f) else MaterialTheme.colorScheme.background,
+            border = BorderStroke(1.dp, if (running > 0) green.copy(alpha = 0.45f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f))
+        ) {
+            Row(Modifier.padding(horizontal = 9.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier.size(7.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(if (running > 0) green else Color.White)
+                        .border(0.5.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f), androidx.compose.foundation.shape.CircleShape)
+                )
+                Spacer(Modifier.width(5.dp))
+                Text(if (running == 1) "1 agent" else "$running agents", fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, color = color, maxLines = 1)
+            }
+        }
+        DropdownMenu(
+            expanded = open,
+            onDismissRequest = { open = false },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
+            modifier = Modifier.widthIn(min = 270.dp, max = 340.dp)
+        ) {
+            SubagentsMenuHeader(subagents.size, running)
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+            Spacer(Modifier.height(4.dp))
+            subagentTree(subagents).forEach { row ->
+                SubagentTreeRow(row) { open = false; onOpen(row.conv.id) }
+            }
+            Spacer(Modifier.height(4.dp))
+        }
+    }
+}
+
+/** One row of the subagents tree: the subagent, how deep it is, and how many it started itself. */
+private data class SubagentTreeItem(val conv: com.example.gemini.domain.model.Conversation, val depth: Int, val children: Int)
+
+/**
+ * The chat's subagents as the side bar shows them: each under the chat or subagent that started it, newest first at
+ * every level.
+ */
+private fun subagentTree(agents: List<com.example.gemini.domain.model.Conversation>): List<SubagentTreeItem> {
+    val ids = agents.mapTo(HashSet()) { it.id }
+    val byParent = agents.groupBy { a -> a.parentConversationId?.takeIf { it in ids } }
+    val out = ArrayList<SubagentTreeItem>()
+    fun walk(parent: String?, depth: Int) {
+        byParent[parent].orEmpty().sortedByDescending { it.createdAt }.forEach { c ->
+            out += SubagentTreeItem(c, depth, byParent[c.id]?.size ?: 0)
+            walk(c.id, depth + 1)
+        }
+    }
+    walk(null, 0)
+    return out
+}
+
+@Composable
+private fun SubagentsMenuHeader(total: Int, running: Int) {
+    val green = com.example.gemini.theme.AppColors.success
+    val muted = MaterialTheme.colorScheme.onSurface
+    Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 12.dp, top = 6.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.AutoMirrored.Filled.CallSplit, null, tint = ClaudeAccent, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(8.dp))
+        Text("Subagents", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+        Spacer(Modifier.width(6.dp))
+        Text(
+            "$total", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.clip(RoundedCornerShape(9.dp)).background(muted.copy(alpha = 0.08f)).padding(horizontal = 7.dp, vertical = 1.dp)
+        )
+        Spacer(Modifier.weight(1f))
+        Row(
+            Modifier.clip(RoundedCornerShape(10.dp))
+                .background(if (running > 0) green.copy(alpha = 0.14f) else muted.copy(alpha = 0.06f))
+                .padding(horizontal = 9.dp, vertical = 3.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            if (running > 0) {
+                Box(Modifier.size(6.dp).clip(androidx.compose.foundation.shape.CircleShape).background(green))
+                Spacer(Modifier.width(5.dp))
+            }
+            Text(
+                if (running > 0) "$running running" else "All done",
+                fontSize = 11.sp, fontWeight = FontWeight.SemiBold,
+                color = if (running > 0) green else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun SubagentTreeRow(row: SubagentTreeItem, onClick: () -> Unit) {
+    val a = row.conv
+    val green = com.example.gemini.theme.AppColors.success
+    val nested = row.depth > 0
+    val guide = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.14f)
+    val name = a.subagentRole?.takeIf { it.isNotBlank() } ?: a.title.ifBlank { "Subagent" }
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 6.dp)
+            .clip(RoundedCornerShape(10.dp))
+            .clickable(onClick = onClick)
+            // the tree's guide lines: one per level above this row
+            .drawBehind {
+                for (i in 0 until row.depth) {
+                    val x = (19 + i * 18).dp.toPx()
+                    drawLine(guide, androidx.compose.ui.geometry.Offset(x, 0f), androidx.compose.ui.geometry.Offset(x, size.height), strokeWidth = 1.dp.toPx())
+                }
+            }
+            .padding(start = (10 + row.depth * 18).dp, end = 6.dp, top = 7.dp, bottom = 7.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box {
+            Box(
+                Modifier.size(28.dp).clip(RoundedCornerShape(8.dp))
+                    .background(if (nested) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.07f) else ClaudeAccent.copy(alpha = 0.13f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    if (nested) Icons.AutoMirrored.Filled.CallSplit else Icons.Outlined.SmartToy, null,
+                    tint = if (nested) MaterialTheme.colorScheme.onSurfaceVariant else ClaudeAccent,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+            if (a.isRunning) Box(
+                Modifier.align(Alignment.TopEnd).offset(x = 2.dp, y = (-2).dp).size(9.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(1.5.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape).background(green)
+            )
+        }
+        Spacer(Modifier.width(10.dp))
+        Column(Modifier.weight(1f)) {
+            Text(name, fontSize = 13.5.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            Spacer(Modifier.height(2.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                a.subagentTypeName?.takeIf { it.isNotBlank() }?.let { type ->
+                    Text(
+                        type, fontSize = 10.5.sp, color = ClaudeAccent, maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        modifier = Modifier.widthIn(max = 120.dp).clip(RoundedCornerShape(6.dp))
+                            .background(ClaudeAccent.copy(alpha = 0.12f)).padding(horizontal = 6.dp, vertical = 1.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                }
+                Text(
+                    if (a.isRunning) "running" else "done", fontSize = 11.sp,
+                    fontWeight = if (a.isRunning) FontWeight.SemiBold else FontWeight.Normal,
+                    color = if (a.isRunning) green else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (row.children > 0) {
+                    Spacer(Modifier.width(6.dp))
+                    Icon(Icons.AutoMirrored.Filled.CallSplit, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(11.dp))
+                    Text("${row.children}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+        Spacer(Modifier.width(8.dp))
+        Text(subagentAge(a.updatedAt), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f))
+        Icon(Icons.Outlined.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), modifier = Modifier.size(18.dp))
+    }
+}
+
+/** "now", "5m", "3h", "2d" (like the side bar). */
+private fun subagentAge(ts: Long): String {
+    if (ts <= 0) return ""
+    val mins = (System.currentTimeMillis() - ts).coerceAtLeast(0) / 60_000
+    return when {
+        mins < 1 -> "now"
+        mins < 60 -> "${mins}m"
+        mins < 60 * 24 -> "${mins / 60}h"
+        else -> "${mins / (60 * 24)}d"
+    }
 }
